@@ -1,1 +1,188 @@
 @import "tailwindcss";
+
+:root {
+  color: rgba(214, 224, 255, 0.92);
+  background: linear-gradient(135deg, #0a1229, #0e172f);
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes pulse-glow-delayed {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.glass-card {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(
+    150deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 16px 48px rgba(7, 10, 26, 0.45);
+}
+
+.btn-glossy {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(140, 222, 255, 0.45);
+  background: linear-gradient(
+    130deg,
+    rgba(88, 76, 255, 0.95),
+    rgba(0, 178, 255, 0.86)
+  );
+  box-shadow:
+    0 10px 28px rgba(45, 88, 255, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    filter 220ms ease;
+}
+
+.btn-glossy::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-105%);
+  background: linear-gradient(
+    115deg,
+    transparent 28%,
+    rgba(255, 255, 255, 0.38) 48%,
+    transparent 70%
+  );
+  transition: transform 420ms ease;
+}
+
+.btn-glossy:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow:
+    0 14px 34px rgba(45, 88, 255, 0.52),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+}
+
+.btn-glossy:hover::before {
+  transform: translateX(105%);
+}
+
+.hover-lift {
+  transition:
+    transform 260ms ease,
+    border-color 260ms ease,
+    background-color 260ms ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  border-color: rgba(125, 231, 255, 0.34);
+  background-color: rgba(255, 255, 255, 0.07);
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 5.8s ease-in-out infinite;
+}
+
+.animate-pulse-glow-delayed {
+  animation: pulse-glow-delayed 6.4s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.55s ease-out both;
+}
+
+.pagination-shell {
+  border: 1px solid rgba(143, 228, 255, 0.18);
+  background: linear-gradient(
+    140deg,
+    rgba(11, 17, 38, 0.9),
+    rgba(14, 23, 49, 0.75)
+  );
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 16px 42px rgba(6, 10, 25, 0.62),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.pagination-arrow {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(225, 232, 255, 0.92);
+  border-radius: 0.8rem;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: all 180ms ease;
+}
+
+.pagination-arrow:hover:not(:disabled) {
+  border-color: rgba(125, 231, 255, 0.45);
+  background: rgba(125, 231, 255, 0.13);
+  color: rgba(205, 246, 255, 1);
+}
+
+.pagination-arrow:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.pagination-page {
+  min-width: 2.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(214, 224, 255, 0.86);
+  border-radius: 0.75rem;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.83rem;
+  font-weight: 600;
+  transition: all 180ms ease;
+}
+
+.pagination-page:hover {
+  border-color: rgba(120, 208, 255, 0.45);
+  color: rgba(192, 244, 255, 1);
+}
+
+.pagination-page.is-active {
+  border-color: rgba(116, 221, 255, 0.72);
+  background: linear-gradient(
+    130deg,
+    rgba(80, 76, 255, 0.7),
+    rgba(0, 186, 255, 0.45)
+  );
+  color: #f4fbff;
+  box-shadow: 0 6px 18px rgba(42, 125, 255, 0.4);
+}
