@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Dialog, DialogPanel } from "@headlessui/react";
 import {
   CalendarDaysIcon,
   ChevronLeftIcon,
@@ -25,6 +26,7 @@ import movie10child from "../assets/movie10child.webp";
 import movie11child from "../assets/movie11child.png";
 import movie12 from "../assets/movie12.webp";
 import Header from "../components/Header";
+import { CinemaSeatIcon, CinemaScreenIcon } from "../assets/Icons";
 
 const cinemaCards = [
   {
@@ -566,6 +568,17 @@ const scheduleMovies = [
   },
 ];
 
+const rows = 4;
+const cols = 10;
+
+const seatsData = Array.from({ length: rows }, (_, r) =>
+  Array.from({ length: cols }, (_, c) => ({
+    id: `${r + 1}-${c + 1}`,
+    row: r + 1,
+    seat: c + 1,
+  })),
+);
+
 function getBaseDate() {
   const date = new Date();
   date.setHours(0, 0, 0, 0);
@@ -627,6 +640,7 @@ export default function MainPage() {
   const [priceFilter, setPriceFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("all");
   const [cinemaFilter, setCinemaFilter] = useState("all");
+  const [selectedSession, setSelectedSession] = useState(null);
 
   const allCinemas = useMemo(() => {
     const unique = new Set(
@@ -940,9 +954,19 @@ export default function MainPage() {
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                       {movie.screenings.map((session, index) => (
-                        <div
+                        <button
                           key={`${movie.id}-${session.time}-${index}`}
-                          className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-3"
+                          type="button"
+                          onClick={() =>
+                            setSelectedSession({
+                              movieTitle: movie.title,
+                              moviePoster: movie.poster,
+                              movieRating: movie.rating,
+                              movieDuration: movie.duration,
+                              session,
+                            })
+                          }
+                          className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-3 text-left transition hover:-translate-y-0.5 hover:border-cyan-300/45 hover:bg-cyan-300/[0.08]"
                         >
                           <div className="text-xs text-white/60">
                             {session.format} · {session.hall}
@@ -956,7 +980,7 @@ export default function MainPage() {
                           <div className="text-base font-medium text-white">
                             {session.price} ₽
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -972,6 +996,41 @@ export default function MainPage() {
           </div>
         </section>
       </main>
+
+      <Dialog
+        open={Boolean(selectedSession)}
+        onClose={() => setSelectedSession(null)}
+        className="relative z-50"
+      >
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+          aria-hidden="true"
+        />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="glass-card w-full max-w-xl rounded-3xl p-5 sm:p-6">
+            <div className="flex flex-col items-center gap-8 p-10 bg-slate-900 rounded-xl">
+              <div className="w-full h-2 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.6)] rounded-full mb-10"></div>
+              <div className="grid grid-cols-10 gap-3">
+                {seatsData.flat().map((seat) => (
+                  <button
+                    key={seat.id}
+                    className="w-8 h-8 md:w-10 md:h-10 bg-slate-700 hover:bg-blue-500 rounded-t-lg transition-colors flex items-center justify-center text-[10px] text-slate-400 hover:text-white"
+                    onClick={() =>
+                      console.log(
+                        `Выбрано место: ряд ${seat.row}, место ${seat.seat}`,
+                      )
+                    }
+                  >
+                    {seat.seat}
+                  </button>
+                ))}
+              </div>
+
+              <p className="text-slate-400 text-sm">Выберите место в зале</p>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
     </div>
   );
 }
