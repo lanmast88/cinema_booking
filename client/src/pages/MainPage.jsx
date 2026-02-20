@@ -26,6 +26,7 @@ import movie10child from "../assets/movie10child.webp";
 import movie11child from "../assets/movie11child.png";
 import movie12 from "../assets/movie12.webp";
 import Header from "../components/Header";
+import { useAuth } from "../components/useAuth";
 /*import { CinemaSeatIcon, CinemaScreenIcon } from "../assets/Icons";*/
 
 const cinemaCards = [
@@ -632,9 +633,8 @@ export default function MainPage() {
       };
     });
   }, []);
-
+  const { adm } = useAuth();
   const initialDate = dayTabs[0]?.key ?? toDateKey(getBaseDate());
-
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [searchQuery, setSearchQuery] = useState("");
   const [priceFilter, setPriceFilter] = useState("all");
@@ -727,6 +727,8 @@ export default function MainPage() {
       scheduleSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
+
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#070911] text-white">
@@ -823,14 +825,48 @@ export default function MainPage() {
                         </div>
                       ))}
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => selectCinemaFilter(cinema.name)}
-                      className="mt-5 mr-3 inline-flex max-w-full self-start whitespace-normal rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-4 py-2 text-left text-sm font-semibold leading-snug text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-300/20"
-                    >
-                      Добавить в фильтр расписания
-                    </button>
+                    {adm ? (
+                      <div className="mt-5 flex flex-row items-center gap-3 flex-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => selectCinemaFilter(cinema.name)}
+                          className="inline-flex max-w-full whitespace-normal rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-4 py-2 text-left text-sm font-semibold leading-snug text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-300/20"
+                        >
+                          Добавить в фильтр расписания
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsAdminPanelOpen(true)}
+                          className="inline-flex rounded-xl mr-5 border border-pink-300/50 bg-gradient-to-r from-pink-500/80 to-fuchsia-500/80 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(236,72,153,0.35)] transition hover:from-pink-400/90 hover:to-fuchsia-400/90 hover:shadow-[0_14px_30px_rgba(236,72,153,0.45)]"
+                        >
+                          <svg
+                            class="w-6 h-10 text-gray-800 dark:text-white"
+                            aria-hidden="true"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              stroke="currentColor"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="1.5"
+                              d="M7.75 4H19M7.75 4a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 4h2.25m13.5 6H19m-2.25 0a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 10h11.25m-4.5 6H19M7.75 16a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 16h2.25"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="mt-5 flex flex-row items-center gap-3 flex-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => selectCinemaFilter(cinema.name)}
+                          className="inline-flex max-w-full whitespace-normal rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-4 py-2 text-left text-sm font-semibold leading-snug text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-300/20"
+                        >
+                          Добавить в фильтр расписания
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </article>
@@ -969,34 +1005,62 @@ export default function MainPage() {
 
                     <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                       {movie.screenings.map((session, index) => (
-                        <button
+                        <div
                           key={`${movie.id}-${session.time}-${index}`}
-                          type="button"
-                          onClick={() =>
-                            setSelectedSession({
-                              movieTitle: movie.title,
-                              moviePoster: movie.poster,
-                              movieRating: movie.rating,
-                              movieGenre: movie.genre,
-                              movieDuration: movie.duration,
-                              session,
-                            })
-                          }
-                          className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-3 text-left transition hover:-translate-y-0.5 hover:border-cyan-300/45 hover:bg-cyan-300/[0.08]"
+                          className="relative"
                         >
-                          <div className="text-xs text-white/60">
-                            {session.format} · {session.hall}
-                          </div>
-                          <div className="text-xs text-cyan-200">
-                            {session.cinema}
-                          </div>
-                          <div className="mt-1 text-3xl font-semibold text-yellow-300">
-                            {session.time}
-                          </div>
-                          <div className="text-base font-medium text-white">
-                            {session.price} ₽
-                          </div>
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedSession({
+                                movieTitle: movie.title,
+                                moviePoster: movie.poster,
+                                movieRating: movie.rating,
+                                movieGenre: movie.genre,
+                                movieDuration: movie.duration,
+                                session,
+                              })
+                            }
+                            className="w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-3 text-left transition hover:-translate-y-0.5 hover:border-cyan-300/45 hover:bg-cyan-300/[0.08]"
+                          >
+                            <div className="text-xs text-white/60">
+                              {session.format} · {session.hall}
+                            </div>
+                            <div className="text-xs text-cyan-200">
+                              {session.cinema}
+                            </div>
+                            <div className="mt-1 text-3xl font-semibold text-yellow-300">
+                              {session.time}
+                            </div>
+                            <div className="text-base font-medium text-white">
+                              {session.price} ₽
+                            </div>
+                          </button>
+
+                          {adm && (
+                            <button
+                              type="button"
+                              onClick={() => setIsAdminPanelOpen(true)}
+                              className="absolute right-[0.1px] top-3 z-10 inline-flex rounded-xl mr-5 border border-pink-300/50 bg-gradient-to-r from-pink-500/80 to-fuchsia-500/80 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(236,72,153,0.35)] transition hover:from-pink-400/90 hover:to-fuchsia-400/90 hover:shadow-[0_14px_30px_rgba(236,72,153,0.45)]"
+                            >
+                              <svg
+                                className="h-10 w-6 text-gray-800 dark:text-white"
+                                aria-hidden="true"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  stroke="currentColor"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="1.5"
+                                  d="M7.75 4H19M7.75 4a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 4h2.25m13.5 6H19m-2.25 0a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 10h11.25m-4.5 6H19M7.75 16a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 16h2.25"
+                                />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -1111,6 +1175,35 @@ export default function MainPage() {
                 </p>
               )}
             </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
+      <Dialog
+        open={isAdminPanelOpen}
+        onClose={() => setIsAdminPanelOpen(false)}
+        className="relative z-50"
+      >
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+          aria-hidden="true"
+        />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="glass-card w-full max-w-2xl rounded-3xl p-5 sm:p-6 dialog-panel">
+            <h3 className="text-2xl font-semibold text-pink-300 mb-4 justify-center flex">
+              Изменить описание
+            </h3>
+            <h3 className="text-2xl font-semibold text-pink-300 mb-4 justify-center flex">
+              Изменить фото кинотеатра
+            </h3>
+            <h3 className="text-2xl font-semibold text-pink-300 hover:pink-400 mb-4 justify-center flex">
+              Изменить название кинотеатра
+            </h3>
+            <button
+              onClick={() => setIsAdminPanelOpen(false)}
+              className="w-full rounded-xl bg-pink-500 py-2 font-semibold text-white hover:bg-pink-400 transition"
+            >
+              Закрыть
+            </button>
           </DialogPanel>
         </div>
       </Dialog>

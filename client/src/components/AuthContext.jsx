@@ -8,9 +8,10 @@ export const AuthProvider = ({ children }) => {
   const logout = () => setUser(null);
   const updateUser = (updates) =>
     setUser((prev) => (prev ? { ...prev, ...updates } : prev));
+  const adm = user?.email === "admin@gmail.com" ? true : false;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, adm }}>
       {children}
     </AuthContext.Provider>
   );
