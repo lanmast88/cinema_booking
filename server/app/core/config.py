@@ -1,18 +1,27 @@
-import os
-from dotenv import load_dotenv
 from pathlib import Path
+
 from pydantic import BaseModel
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).parent.parent
 
-load_dotenv()
 
-class Settings():
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise ValueError("Переменная среды DATABASE_URL не установлена.")
-    
+class Settings(BaseSettings):
+    """Настройки приложения, читаются из .env."""
+
+    database_url: str
+
+    model_config = SettingsConfigDict(env_file=BASE_DIR.parent / ".env", extra="ignore")
+
+
 class AuthJWT(BaseModel):
-    private_key_path: Path = BASE_DIR / "certs" / "private_key.pem"
-    public_key_path: Path = BASE_DIR / "certs" / "public_key.pem"
+    """Параметры JWT-аутентификации."""
+
+    private_key_path: Path = BASE_DIR / "certs" / "private.pem"
+    public_key_path: Path = BASE_DIR / "certs" / "public.pem"
     algorithm: str = "RS256"
+    access_token_expire_minutes: int = 30
+
+
+settings = Settings()
+auth_jwt = AuthJWT()

@@ -5,12 +5,11 @@ from .movie import MovieBase, MovieCreate, MovieUpdate, MovieOut
 from .order import OrderBase, OrderCreate, OrderOut
 from .screening import ScreeningBase, ScreeningCreate, ScreeningOut
 from .ticket import TicketBase, TicketCreate, TicketOut
-from .user import UserBase, UserCreate, UserLogin, UserOut
+from .user import UserCreate, UserLogin, UserOut
 
 __all__ = [
     "OrmBase",
     # user
-    "UserBase",
     "UserCreate",
     "UserLogin",
     "UserOut",

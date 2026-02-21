@@ -1,20 +1,26 @@
-import asyncio
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.sql import text
-from app.core.config import Settings
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 from sqlalchemy.orm import declarative_base
 
-DATABASE_URL = Settings.database_url
+from app.core.config import settings
 
-# Ассинхронный движок SQLAlchemy 
-engine = create_async_engine(DATABASE_URL, echo=True, future=True)
+engine = create_async_engine(settings.database_url, echo=False, future=True)
+
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
 
 Base = declarative_base()
 
-async def test_connection():
-    async with engine.connect() as conn:
-        result = await conn.execute(text("SELECT VERSION()"))
-        version = result.scalar()
-        print(f"Успешное подключение к базе данных! Версия: {version}")
 
-asyncio.run(test_connection())
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """FastAPI dependency: предоставляет сессию БД на время запроса."""
+    async with AsyncSessionLocal() as session:
+        yield session

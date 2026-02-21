@@ -1,26 +1,31 @@
 from datetime import datetime
 
+from pydantic import EmailStr
+
 from .base import OrmBase
 
 
-class UserBase(OrmBase):
-    email: str
-    role: str = "client"
+class UserCreate(OrmBase):
+    """Данные для регистрации нового пользователя."""
 
-
-class UserCreate(UserBase):
+    email: EmailStr
     password: str
 
 
 class UserLogin(OrmBase):
-    email: str
+    """Данные для входа (используется как OAuth2 form)."""
+
+    email: EmailStr
     password: str
 
 
-class UserOut(UserBase):
+class UserOut(OrmBase):
+    """Публичное представление пользователя."""
+
     id: int
+    email: EmailStr
+    role: str
     created_at: datetime
 
 
-__all__ = ["UserBase", "UserCreate", "UserLogin", "UserOut"]
-
+__all__ = ["UserCreate", "UserLogin", "UserOut"]
