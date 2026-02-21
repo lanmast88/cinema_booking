@@ -44,6 +44,8 @@ class Hall(Base):
     id = Column(Integer, primary_key=True, index=True)
     cinema_id = Column(Integer, ForeignKey("cinema.id", ondelete="CASCADE"), nullable=False)
     name = Column(String(255), nullable=False)
+    rows = Column(Integer, nullable=False, default=4)
+    seats_per_row = Column(Integer, nullable=False, default=10)
 
     cinema = relationship("Cinema", back_populates="halls")
     screenings = relationship(
