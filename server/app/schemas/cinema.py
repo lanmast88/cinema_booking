@@ -12,9 +12,14 @@ class CinemaCreate(CinemaBase):
     pass
 
 
+class CinemaUpdate(OrmBase):
+    name: Optional[str] = None
+    address: Optional[str] = None
+
+
 class CinemaOut(CinemaBase):
     id: int
 
 
-__all__ = ["CinemaBase", "CinemaCreate", "CinemaOut"]
+__all__ = ["CinemaBase", "CinemaCreate", "CinemaUpdate", "CinemaOut"]
 

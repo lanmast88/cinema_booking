@@ -1,3 +1,5 @@
+from typing import Optional
+
 from .base import OrmBase
 
 
@@ -10,9 +12,13 @@ class HallCreate(HallBase):
     pass
 
 
+class HallUpdate(OrmBase):
+    name: Optional[str] = None
+
+
 class HallOut(HallBase):
     id: int
 
 
-__all__ = ["HallBase", "HallCreate", "HallOut"]
+__all__ = ["HallBase", "HallCreate", "HallUpdate", "HallOut"]
 
