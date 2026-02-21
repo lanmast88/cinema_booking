@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.auth.deps import require_role
 from app.db.database import get_db
 from app.models.models import Hall, Movie, Screening, Ticket, User
-from app.schemas.screening import ScreeningCreate, ScreeningOut
+from app.schemas.screening import ScreeningCreate, ScreeningOut, ScreeningUpdate
 
 router = APIRouter(prefix="/screenings", tags=["Screenings"])
 
@@ -82,6 +82,49 @@ async def get_screening(
     if screening is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сеанс не найден.")
     return screening
+
+
+@router.put(
+    "/{screening_id}",
+    response_model=ScreeningOut,
+    summary="Обновить сеанс (только admin)",
+)
+async def update_screening(
+    screening_id: int,
+    screening_data: ScreeningUpdate,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_role("admin")),
+) -> Screening:
+    result = await db.execute(select(Screening).where(Screening.id == screening_id))
+    screening = result.scalar_one_or_none()
+    if screening is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сеанс не найден.")
+
+    for field, value in screening_data.model_dump(exclude_unset=True).items():
+        setattr(screening, field, value)
+
+    await db.commit()
+    await db.refresh(screening)
+    return screening
+
+
+@router.delete(
+    "/{screening_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить сеанс (только admin)",
+)
+async def delete_screening(
+    screening_id: int,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_role("admin")),
+) -> None:
+    result = await db.execute(select(Screening).where(Screening.id == screening_id))
+    screening = result.scalar_one_or_none()
+    if screening is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сеанс не найден.")
+
+    await db.delete(screening)
+    await db.commit()
 
 
 @router.post(

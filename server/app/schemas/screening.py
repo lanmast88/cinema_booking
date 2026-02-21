@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 from .base import OrmBase
 
@@ -15,9 +16,14 @@ class ScreeningCreate(ScreeningBase):
     pass
 
 
+class ScreeningUpdate(OrmBase):
+    start_time: Optional[datetime] = None
+    price: Optional[Decimal] = None
+
+
 class ScreeningOut(ScreeningBase):
     id: int
 
 
-__all__ = ["ScreeningBase", "ScreeningCreate", "ScreeningOut"]
+__all__ = ["ScreeningBase", "ScreeningCreate", "ScreeningUpdate", "ScreeningOut"]
 
