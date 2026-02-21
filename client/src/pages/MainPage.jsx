@@ -74,6 +74,7 @@ const scheduleMovies = [
         format: "2D",
         hall: "Зал 4",
         cinema: "Cinema Star",
+        purchasedSeats: [],
       },
       {
         dayOffset: 0,
@@ -584,6 +585,15 @@ const seatsData = Array.from({ length: rows }, (_, r) =>
   })),
 );
 
+const emptyAdminForm = {
+  dayOffset: "0",
+  time: "",
+  price: "",
+  format: "",
+  hall: "",
+  cinema: "",
+};
+
 function getBaseDate() {
   const date = new Date();
   date.setHours(0, 0, 0, 0);
@@ -646,6 +656,9 @@ export default function MainPage() {
   const [cinemaFilter, setCinemaFilter] = useState("all");
   const [selectedSession, setSelectedSession] = useState(null);
   const [chosenSeats, setChosenSeats] = useState([]);
+  const [moviesData, setMoviesData] = useState(scheduleMovies);
+  const [adminSession, setAdminSession] = useState(null);
+  const [adminForm, setAdminForm] = useState(emptyAdminForm);
 
   const plusChosenSeat = (row, seat) => {
     setChosenSeats((prev) => {
@@ -661,14 +674,56 @@ export default function MainPage() {
     );
   };
 
+  const plusPurchasedSeats = (seats) => {
+    if (!selectedSession || seats.length === 0) return;
+
+    setMoviesData((prev) =>
+      prev.map((movie) => {
+        if (movie.id !== selectedSession.movieId) return movie;
+
+        return {
+          ...movie,
+          screenings: movie.screenings.map((session) => {
+            const isTargetSession =
+              session.dayOffset === selectedSession.session.dayOffset &&
+              session.time === selectedSession.session.time &&
+              session.hall === selectedSession.session.hall &&
+              session.cinema === selectedSession.session.cinema;
+
+            if (!isTargetSession) return session;
+
+            const existingSeats = session.purchasedSeats ?? [];
+            const mergedSeats = [...existingSeats];
+
+            seats.forEach(([row, seat]) => {
+              const alreadyExists = mergedSeats.some(
+                ([r, s]) => r === row && s === seat,
+              );
+              if (!alreadyExists) {
+                mergedSeats.push([row, seat]);
+              }
+            });
+
+            return {
+              ...session,
+              purchasedSeats: mergedSeats,
+            };
+          }),
+        };
+      }),
+    );
+
+    setChosenSeats([]);
+  };
+
   const allCinemas = useMemo(() => {
     const unique = new Set(
-      scheduleMovies.flatMap((movie) =>
+      moviesData.flatMap((movie) =>
         movie.screenings.map((session) => session.cinema),
       ),
     );
     return Array.from(unique);
-  }, []);
+  }, [moviesData]);
 
   const shiftSlide = (cinemaId, direction, imagesLength) => {
     setActiveSlides((prev) => {
@@ -681,7 +736,7 @@ export default function MainPage() {
   const filteredSchedule = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    return scheduleMovies
+    return moviesData
       .map((movie) => {
         const screenings = movie.screenings.filter((session) => {
           const sessionDate = toDateKey(getDateByOffset(session.dayOffset));
@@ -722,7 +777,14 @@ export default function MainPage() {
 
         return byTitle || byGenre || byCinema;
       });
-  }, [cinemaFilter, priceFilter, searchQuery, selectedDate, timeFilter]);
+  }, [
+    cinemaFilter,
+    moviesData,
+    priceFilter,
+    searchQuery,
+    selectedDate,
+    timeFilter,
+  ]);
 
   const selectCinemaFilter = (cinemaName) => {
     setCinemaFilter(cinemaName);
@@ -732,7 +794,72 @@ export default function MainPage() {
     }
   };
 
+  const deleteMovieById = (movieId) => {
+    setMoviesData((prev) => prev.filter((movie) => movie.id !== movieId));
+    if (selectedSession?.movieId === movieId) {
+      setSelectedSession(null);
+    }
+  };
+
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+
+  const openAdminForSession = (movie, session, sessionIndex) => {
+    setAdminSession({
+      movieId: movie.id,
+      movieTitle: movie.title,
+      movieRating: movie.rating,
+      movieGenre: movie.genre,
+      movieDuration: movie.duration,
+      sessionIndex,
+      ...session,
+    });
+    setAdminForm({
+      dayOffset: String(session.dayOffset ?? 0),
+      time: session.time ?? "",
+      price: String(session.price ?? ""),
+      format: session.format ?? "",
+      hall: session.hall ?? "",
+      cinema: session.cinema ?? "",
+    });
+    setIsAdminPanelOpen(true);
+  };
+
+  const closeAdminPanel = () => {
+    setIsAdminPanelOpen(false);
+    setAdminSession(null);
+    setAdminForm(emptyAdminForm);
+  };
+
+  const saveAdminSession = () => {
+    if (!adminSession) return;
+
+    setMoviesData((prev) =>
+      prev.map((movie) => {
+        if (movie.id !== adminSession.movieId) return movie;
+
+        return {
+          ...movie,
+          screenings: movie.screenings.map((session, index) => {
+            if (index !== adminSession.sessionIndex) return session;
+
+            const parsedPrice = Number(adminForm.price);
+
+            return {
+              ...session,
+              dayOffset: Number(adminForm.dayOffset),
+              time: adminForm.time.trim() || session.time,
+              price: Number.isFinite(parsedPrice) ? parsedPrice : session.price,
+              format: adminForm.format.trim() || session.format,
+              hall: adminForm.hall.trim() || session.hall,
+              cinema: adminForm.cinema.trim() || session.cinema,
+            };
+          }),
+        };
+      }),
+    );
+
+    closeAdminPanel();
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#070911] text-white">
@@ -829,48 +956,15 @@ export default function MainPage() {
                         </div>
                       ))}
                     </div>
-                    {adm ? (
-                      <div className="mt-5 flex flex-row items-center gap-3 flex-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => selectCinemaFilter(cinema.name)}
-                          className="inline-flex max-w-full whitespace-normal rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-4 py-2 text-left text-sm font-semibold leading-snug text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-300/20"
-                        >
-                          Добавить в фильтр расписания
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsAdminPanelOpen(true)}
-                          className="inline-flex rounded-xl mr-5 border border-pink-300/50 bg-gradient-to-r from-pink-500/80 to-fuchsia-500/80 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(236,72,153,0.35)] transition hover:from-pink-400/90 hover:to-fuchsia-400/90 hover:shadow-[0_14px_30px_rgba(236,72,153,0.45)]"
-                        >
-                          <svg
-                            class="w-6 h-10 text-gray-800 dark:text-white"
-                            aria-hidden="true"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              stroke="currentColor"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="1.5"
-                              d="M7.75 4H19M7.75 4a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 4h2.25m13.5 6H19m-2.25 0a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 10h11.25m-4.5 6H19M7.75 16a2.25 2.25 0 0 1-4.5 0m4.5 0a2.25 2.25 0 0 0-4.5 0M1 16h2.25"
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="mt-5 flex flex-row items-center gap-3 flex-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => selectCinemaFilter(cinema.name)}
-                          className="inline-flex max-w-full whitespace-normal rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-4 py-2 text-left text-sm font-semibold leading-snug text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-300/20"
-                        >
-                          Добавить в фильтр расписания
-                        </button>
-                      </div>
-                    )}
+                    <div className="mt-5 flex flex-row items-center gap-3 flex-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => selectCinemaFilter(cinema.name)}
+                        className="inline-flex max-w-full whitespace-normal rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-4 py-2 text-left text-sm font-semibold leading-snug text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-300/20"
+                      >
+                        Добавить в фильтр расписания
+                      </button>
+                    </div>
                   </div>
                 </div>
               </article>
@@ -883,7 +977,7 @@ export default function MainPage() {
             Расписание сеансов
           </h2>
 
-          <div className="glass-card mt-6 rounded-3xl p-4 sm:p-5">
+          <div className="glass-card mt-6 rounded-3xl p-4 pb-8 sm:p-5 sm:pb-10 relative">
             <div className="flex flex-wrap gap-2">
               {dayTabs.map((day) => (
                 <button
@@ -968,7 +1062,7 @@ export default function MainPage() {
               <select
                 value={cinemaFilter}
                 onChange={(event) => setCinemaFilter(event.target.value)}
-                className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2.5 text-sm text-white outline-none transition focus:border-cyan-300/50"
+                className="w-full max-w-xs rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2.5 text-sm text-white outline-none transition focus:border-cyan-300/50"
               >
                 <option value="all" className="bg-[#0b1020]">
                   Кинотеатр: все
@@ -984,14 +1078,39 @@ export default function MainPage() {
                 ))}
               </select>
             </div>
+            {adm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminSession(null);
+                  setAdminForm(emptyAdminForm);
+                  setIsAdminPanelOpen(true);
+                }}
+                className="absolute bottom-4 right-4 inline-flex max-w-full whitespace-normal rounded-xl border border-pink-300/50 bg-gradient-to-r from-pink-500/80 to-fuchsia-500/80 px-4 py-2 text-left text-sm font-semibold leading-snug text-white shadow-[0_10px_24px_rgba(236,72,153,0.35)] transition hover:from-pink-400/90 hover:to-fuchsia-400/90 hover:border-cyan-300/45 hover:bg-cyan-300/[0.08]"
+              >
+                Добавить фильм/сеанс
+              </button>
+            )}
           </div>
 
           <div className="mt-6 space-y-4">
             {filteredSchedule.map((movie) => (
               <article
                 key={movie.id}
-                className="glass-card rounded-3xl p-4 sm:p-5"
+                className="glass-card relative rounded-3xl p-4 sm:p-5"
               >
+                {adm && (
+                  <button
+                    type="button"
+                    onClick={() => deleteMovieById(movie.id)}
+                    className="group/delete absolute right-4 top-4 z-20 inline-flex items-center rounded-xl border border-rose-300/60 bg-gradient-to-r from-rose-500/90 to-red-500/85 px-2.5 py-1.5 text-white shadow-[0_10px_24px_rgba(244,63,94,0.38)] transition-all duration-200 hover:-translate-y-0.5 hover:from-rose-400/95 hover:to-red-400/90"
+                  >
+                    <span className="text-base leading-none">×</span>
+                    <span className="ml-0 max-w-0 overflow-hidden whitespace-nowrap text-xs font-semibold opacity-0 transition-all duration-200 group-hover/delete:ml-2 group-hover/delete:max-w-24 group-hover/delete:opacity-100">
+                      Удалить фильм
+                    </span>
+                  </button>
+                )}
                 <div className="grid gap-4 md:grid-cols-[180px_1fr]">
                   <img
                     src={movie.poster}
@@ -1011,13 +1130,14 @@ export default function MainPage() {
                       {movie.screenings.map((session, index) => (
                         <div
                           key={`${movie.id}-${session.time}-${index}`}
-                          className="relative"
+                          className="group relative"
                         >
                           <button
                             type="button"
                             onClick={() =>
                               setSelectedSession({
                                 movieTitle: movie.title,
+                                movieId: movie.id,
                                 moviePoster: movie.poster,
                                 movieRating: movie.rating,
                                 movieGenre: movie.genre,
@@ -1040,15 +1160,18 @@ export default function MainPage() {
                               {session.price} ₽
                             </div>
                           </button>
-
                           {adm && (
                             <button
                               type="button"
-                              onClick={() => setIsAdminPanelOpen(true)}
-                              className="absolute right-[0.1px] top-3 z-10 inline-flex rounded-xl mr-5 border border-pink-300/50 bg-gradient-to-r from-pink-500/80 to-fuchsia-500/80 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(236,72,153,0.35)] transition hover:from-pink-400/90 hover:to-fuchsia-400/90 hover:shadow-[0_14px_30px_rgba(236,72,153,0.45)]"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openAdminForSession(movie, session, index);
+                              }}
+                              className="absolute right-2 top-2 z-20 inline-flex rounded-lg border border-pink-300/50 bg-gradient-to-r from-pink-500/80 to-fuchsia-500/80 px-2 py-1 text-white shadow-[0_10px_24px_rgba(236,72,153,0.35)] transition-all hover:from-pink-400/90 hover:to-fuchsia-400/90 group-hover:-translate-y-0.5"
+                              aria-label="Открыть панель администратора для сеанса"
                             >
                               <svg
-                                className="h-10 w-6 text-gray-800 dark:text-white"
+                                className="h-4 w-4"
                                 aria-hidden="true"
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
@@ -1186,6 +1309,14 @@ export default function MainPage() {
                       </div>
                     ))}
                   </div>
+                  <div className="flex justify-center">
+                    <button
+                      className="mt-4 inline-flex items-center justify-center rounded-xl border border-emerald-300/40 bg-gradient-to-r from-emerald-500/90 via-green-500/90 to-teal-500/90 px-6 py-2.5 text-sm font-semibold tracking-wide text-white shadow-[0_12px_28px_rgba(16,185,129,0.35)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:from-emerald-400 hover:via-green-400 hover:to-teal-400 hover:shadow-[0_16px_34px_rgba(16,185,129,0.45)] active:translate-y-0 active:scale-[0.99]"
+                      onClick={() => plusPurchasedSeats(chosenSeats)}
+                    >
+                      Купить
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <p className="text-center text-sm text-slate-400">
@@ -1198,7 +1329,7 @@ export default function MainPage() {
       </Dialog>
       <Dialog
         open={isAdminPanelOpen}
-        onClose={() => setIsAdminPanelOpen(false)}
+        onClose={closeAdminPanel}
         className="relative z-50"
       >
         <div
@@ -1207,21 +1338,159 @@ export default function MainPage() {
         />
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <DialogPanel className="glass-card w-full max-w-2xl rounded-3xl p-5 sm:p-6 dialog-panel">
-            <h3 className="text-2xl font-semibold text-pink-300 mb-4 justify-center flex">
-              Изменить описание
-            </h3>
-            <h3 className="text-2xl font-semibold text-pink-300 mb-4 justify-center flex">
-              Изменить фото кинотеатра
-            </h3>
-            <h3 className="text-2xl font-semibold text-pink-300 hover:pink-400 mb-4 justify-center flex">
-              Изменить название кинотеатра
-            </h3>
-            <button
-              onClick={() => setIsAdminPanelOpen(false)}
-              className="w-full rounded-xl bg-pink-500 py-2 font-semibold text-white hover:bg-pink-400 transition"
-            >
-              Закрыть
-            </button>
+            {adminSession ? (
+              <div className="mb-5 rounded-xl border border-pink-300/30 bg-pink-500/10 p-4">
+                <h3 className="text-lg font-semibold text-pink-200">
+                  {adminSession.movieTitle}
+                </h3>
+                <p className="mt-1 text-sm text-white/75">
+                  {adminSession.movieRating} · {adminSession.movieGenre} ·{" "}
+                  {adminSession.movieDuration}
+                </p>
+                <p className="mt-2 text-sm text-white/80">
+                  Сеанс: {adminForm.time} · {adminSession.format} ·{" "}
+                  {adminForm.cinema}
+                </p>
+              </div>
+            ) : (
+              <div className="mb-5 rounded-xl border border-pink-300/30 bg-pink-500/10 p-4 text-sm text-white/80">
+                Режим добавления нового фильма/сеанса
+              </div>
+            )}
+            {adminSession && (
+              <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                <label className="text-sm text-white/80">
+                  День
+                  <select
+                    value={adminForm.dayOffset}
+                    onChange={(event) =>
+                      setAdminForm((prev) => ({
+                        ...prev,
+                        dayOffset: event.target.value,
+                      }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300/50"
+                  >
+                    <option value="0" className="bg-[#0b1020]">
+                      Сегодня
+                    </option>
+                    <option value="1" className="bg-[#0b1020]">
+                      Завтра
+                    </option>
+                    <option value="2" className="bg-[#0b1020]">
+                      Через 2 дня
+                    </option>
+                    <option value="3" className="bg-[#0b1020]">
+                      Через 3 дня
+                    </option>
+                  </select>
+                </label>
+                <label className="text-sm text-white/80">
+                  Время
+                  <input
+                    type="time"
+                    value={adminForm.time}
+                    onChange={(event) =>
+                      setAdminForm((prev) => ({
+                        ...prev,
+                        time: event.target.value,
+                      }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300/50"
+                  />
+                </label>
+                <label className="text-sm text-white/80">
+                  Цена
+                  <input
+                    type="number"
+                    min="0"
+                    value={adminForm.price}
+                    onChange={(event) =>
+                      setAdminForm((prev) => ({
+                        ...prev,
+                        price: event.target.value,
+                      }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300/50"
+                  />
+                </label>
+                <label className="text-sm text-white/80">
+                  Формат
+                  <input
+                    type="text"
+                    value={adminForm.format}
+                    onChange={(event) =>
+                      setAdminForm((prev) => ({
+                        ...prev,
+                        format: event.target.value,
+                      }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300/50"
+                  />
+                </label>
+                <label className="text-sm text-white/80">
+                  Зал
+                  <input
+                    type="text"
+                    value={adminForm.hall}
+                    onChange={(event) =>
+                      setAdminForm((prev) => ({
+                        ...prev,
+                        hall: event.target.value,
+                      }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300/50"
+                  />
+                </label>
+                <label className="text-sm text-white/80">
+                  Кинотеатр
+                  <input
+                    type="text"
+                    value={adminForm.cinema}
+                    onChange={(event) =>
+                      setAdminForm((prev) => ({
+                        ...prev,
+                        cinema: event.target.value,
+                      }))
+                    }
+                    className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none transition focus:border-cyan-300/50"
+                  />
+                </label>
+              </div>
+            )}
+            <div className="mt-4 mb-4 space-y-3">
+              {adminSession?.purchasedSeats?.map(
+                (seat, index) => (
+                  console.log(adminSession.purchasedSeats),
+                  (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2"
+                    >
+                      <span className="rounded-2xl p-4">
+                        Ряд {seat[0]}, место {seat[1]}
+                      </span>
+                    </div>
+                  )
+                ),
+              )}
+            </div>
+            <div className="flex gap-3">
+              {adminSession && (
+                <button
+                  onClick={saveAdminSession}
+                  className="w-full rounded-xl bg-emerald-500 py-2 font-semibold text-white transition hover:bg-emerald-400"
+                >
+                  Сохранить сеанс
+                </button>
+              )}
+              <button
+                onClick={closeAdminPanel}
+                className="w-full rounded-xl bg-pink-500 py-2 font-semibold text-white hover:bg-pink-400 transition"
+              >
+                Закрыть
+              </button>
+            </div>
           </DialogPanel>
         </div>
       </Dialog>
