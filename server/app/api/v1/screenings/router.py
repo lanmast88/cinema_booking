@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import date, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,14 +29,27 @@ class SeatsOut(BaseModel):
 @router.get(
     "",
     response_model=list[ScreeningOut],
-    summary="Получить список всех сеансов",
+    summary="Список сеансов с фильтрацией по фильму и дате",
 )
 async def get_screenings(
+    movie_id: int | None = Query(default=None, description="ID фильма"),
+    date: date | None = Query(default=None, description="Дата сеанса (YYYY-MM-DD)"),
     skip: int = 0,
     limit: int = 20,
     db: AsyncSession = Depends(get_db),
 ) -> list[Screening]:
-    result = await db.execute(select(Screening).offset(skip).limit(limit))
+    query = select(Screening)
+
+    if movie_id is not None:
+        query = query.where(Screening.movie_id == movie_id)
+
+    if date is not None:
+        query = query.where(
+            Screening.start_time >= date,
+            Screening.start_time < date + timedelta(days=1),
+        )
+
+    result = await db.execute(query.offset(skip).limit(limit))
     return result.scalars().all()
 
 
