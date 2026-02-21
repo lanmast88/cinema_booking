@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from app.api.v1.auth import router as auth_router
 from app.api.v1.movies import router as movies_router
+from app.api.v1.screenings import router as screenings_router
 
 app = FastAPI(
     title="Cinema Booking API",
@@ -11,6 +12,7 @@ app = FastAPI(
 
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(movies_router, prefix="/api/v1")
+app.include_router(screenings_router, prefix="/api/v1")
 
 
 @app.get("/", tags=["Health"])
