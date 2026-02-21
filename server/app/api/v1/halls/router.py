@@ -16,9 +16,11 @@ router = APIRouter(prefix="/halls", tags=["Halls"])
     summary="Список всех залов",
 )
 async def get_halls(
+    skip: int = 0,
+    limit: int = 20,
     db: AsyncSession = Depends(get_db),
 ) -> list[Hall]:
-    result = await db.execute(select(Hall))
+    result = await db.execute(select(Hall).offset(skip).limit(limit))
     return result.scalars().all()
 
 

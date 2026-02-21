@@ -125,12 +125,14 @@ async def pay_order(
     summary="Мои заказы",
 )
 async def get_my_orders(
+    skip: int = 0,
+    limit: int = 20,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[Order]:
     result = await db.execute(
         _load_tickets(
-            select(Order).where(Order.user_id == current_user.id)
+            select(Order).where(Order.user_id == current_user.id).offset(skip).limit(limit)
         )
     )
     return result.scalars().all()

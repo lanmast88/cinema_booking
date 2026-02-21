@@ -16,9 +16,11 @@ router = APIRouter(prefix="/movies", tags=["Movies"])
     summary="Получить список всех фильмов",
 )
 async def get_movies(
+    skip: int = 0,
+    limit: int = 20,
     db: AsyncSession = Depends(get_db),
 ) -> list[Movie]:
-    result = await db.execute(select(Movie))
+    result = await db.execute(select(Movie).offset(skip).limit(limit))
     return result.scalars().all()
 
 

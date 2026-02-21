@@ -30,9 +30,11 @@ class SeatsOut(BaseModel):
     summary="Получить список всех сеансов",
 )
 async def get_screenings(
+    skip: int = 0,
+    limit: int = 20,
     db: AsyncSession = Depends(get_db),
 ) -> list[Screening]:
-    result = await db.execute(select(Screening))
+    result = await db.execute(select(Screening).offset(skip).limit(limit))
     return result.scalars().all()
 
 
