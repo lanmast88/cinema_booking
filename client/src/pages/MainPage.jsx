@@ -1124,7 +1124,7 @@ export default function MainPage() {
                     className="group/delete absolute right-4 top-4 z-20 inline-flex items-center rounded-xl border border-rose-300/60 bg-gradient-to-r from-rose-500/90 to-red-500/85 px-2.5 py-1.5 text-white shadow-[0_10px_24px_rgba(244,63,94,0.38)] transition-all duration-200 hover:-translate-y-0.5 hover:from-rose-400/95 hover:to-red-400/90"
                   >
                     <span className="text-base leading-none">×</span>
-                    <span className="ml-0 max-w-0 overflow-hidden whitespace-nowrap text-xs font-semibold opacity-0 transition-all duration-200 group-hover/delete:ml-2 group-hover/delete:max-w-24 group-hover/delete:opacity-100">
+                    <span className="ml-0 max-w-0 overflow-hidden whitespace-nowrap text-xs font-semibold opacity-0 transition-all duration-500 group-hover/delete:ml-2 group-hover/delete:max-w-24 group-hover/delete:opacity-100">
                       Удалить фильм
                     </span>
                   </button>
