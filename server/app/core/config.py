@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     """Настройки приложения, читаются из .env."""
 
     database_url: str
+    cors_origins: list[str] = ["http://localhost:5173"]
 
     model_config = SettingsConfigDict(env_file=BASE_DIR.parent / ".env", extra="ignore")
 
