@@ -11,6 +11,8 @@ class Settings(BaseSettings):
 
     database_url: str
     cors_origins: list[str] = ["http://localhost:5173"]
+    log_level: str = "INFO"
+    log_file: str | None = None
 
     model_config = SettingsConfigDict(env_file=BASE_DIR.parent / ".env", extra="ignore")
 

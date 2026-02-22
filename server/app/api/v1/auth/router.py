@@ -6,11 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.auth import utils as auth_utils
 from app.api.v1.auth.deps import get_current_user, require_role
+from app.core.logging import get_logger
 from app.db.database import get_db
 from app.models.models import User
 from app.schemas.user import UserCreate, UserOut
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+logger = get_logger(__name__)
 
 
 class TokenInfo(BaseModel):
@@ -30,6 +32,7 @@ async def register(
 ) -> User:
     result = await db.execute(select(User).where(User.email == user_data.email))
     if result.scalar_one_or_none() is not None:
+        logger.warning("Попытка регистрации с уже занятым email: %s", user_data.email)
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Пользователь с таким email уже существует.",
@@ -43,6 +46,7 @@ async def register(
     db.add(user)
     await db.commit()
     await db.refresh(user)
+    logger.info("Новый пользователь зарегистрирован: %s (id=%d)", user.email, user.id)
     return user
 
 
@@ -66,8 +70,10 @@ async def login(
     user = result.scalar_one_or_none()
 
     if user is None or not auth_utils.validate_password(form_data.password, user.password_hash):
+        logger.warning("Неудачная попытка входа для email: %s", form_data.username)
         raise unauthed_exc
 
+    logger.info("Вход выполнен: %s (id=%d, role=%s)", user.email, user.id, user.role)
     token = auth_utils.encode_jwt({"sub": user.email, "role": user.role})
     return TokenInfo(access_token=token)
 

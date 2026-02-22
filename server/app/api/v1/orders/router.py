@@ -5,11 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.v1.auth.deps import get_current_user, require_role
+from app.core.logging import get_logger
 from app.db.database import get_db
 from app.models.models import Order, Screening, Ticket, User
 from app.schemas.order import OrderCreate, OrderOut
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
+logger = get_logger(__name__)
 
 
 def _load_tickets(query):
@@ -55,6 +57,11 @@ async def create_order(
         )
     )
     if taken.scalars().first() is not None:
+        logger.warning(
+            "Места уже заняты — сеанс id=%d, пользователь id=%d",
+            order_data.screening_id,
+            current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Одно или несколько мест уже заняты.",
@@ -79,6 +86,11 @@ async def create_order(
         await db.commit()
     except IntegrityError:
         await db.rollback()
+        logger.warning(
+            "Гонка при бронировании — сеанс id=%d, пользователь id=%d",
+            order_data.screening_id,
+            current_user.id,
+        )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Одно или несколько мест уже заняты (конфликт).",
@@ -87,7 +99,15 @@ async def create_order(
     result = await db.execute(
         _load_tickets(select(Order).where(Order.id == order.id))
     )
-    return result.scalar_one()
+    created_order = result.scalar_one()
+    logger.info(
+        "Заказ создан: id=%d, сеанс id=%d, пользователь id=%d, мест=%d",
+        created_order.id,
+        order_data.screening_id,
+        current_user.id,
+        len(order_data.seats),
+    )
+    return created_order
 
 
 @router.post(
@@ -116,6 +136,7 @@ async def pay_order(
     order.status = "paid"
     await db.commit()
     await db.refresh(order)
+    logger.info("Заказ оплачен: id=%d, пользователь id=%d", order.id, current_user.id)
     return order
 
 
@@ -159,6 +180,7 @@ async def cancel_order(
     order.status = "cancelled"
     await db.commit()
     await db.refresh(order)
+    logger.info("Заказ отменён (admin): id=%d", order.id)
     return order
 
 
