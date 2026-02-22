@@ -4,7 +4,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import AuthPage from "./pages/AuthPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import UserPage from "./pages/UserPage";
-
 function App() {
   return (
     <Routes>

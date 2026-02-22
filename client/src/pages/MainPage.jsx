@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import {
   CalendarDaysIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
@@ -603,7 +604,10 @@ function getDateByOffset(offset) {
 }
 
 function toDateKey(date) {
-  return date.toISOString().slice(0, 10);
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function formatTabTitle(date, offset) {
@@ -820,6 +824,7 @@ export default function MainPage() {
   };
 
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [movieToDelete, setMovieToDelete] = useState(null);
 
   const openAdminForSession = (movie, session, sessionIndex) => {
     setAdminSession({
@@ -1036,52 +1041,60 @@ export default function MainPage() {
                 />
               </label>
 
-              <select
-                value={priceFilter}
-                onChange={(event) => setPriceFilter(event.target.value)}
-                className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2.5 text-sm text-white outline-none transition focus:border-cyan-300/50"
-              >
-                <option value="all" className="bg-[#0b1020]">
-                  Цена: любая
-                </option>
-                <option value="under600" className="bg-[#0b1020]">
-                  До 600 ₽
-                </option>
-                <option value="600to750" className="bg-[#0b1020]">
-                  600–750 ₽
-                </option>
-                <option value="over750" className="bg-[#0b1020]">
-                  Свыше 750 ₽
-                </option>
-              </select>
+              <label className="relative">
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
+                <select
+                  value={priceFilter}
+                  onChange={(event) => setPriceFilter(event.target.value)}
+                  className="w-full appearance-none rounded-xl border border-white/12 bg-white/[0.03] py-2.5 pl-3 pr-9 text-sm text-white outline-none transition focus:border-cyan-300/50"
+                >
+                  <option value="all" className="bg-[#0b1020]">
+                    Цена: любая
+                  </option>
+                  <option value="under600" className="bg-[#0b1020]">
+                    До 600 ₽
+                  </option>
+                  <option value="600to750" className="bg-[#0b1020]">
+                    600–750 ₽
+                  </option>
+                  <option value="over750" className="bg-[#0b1020]">
+                    Свыше 750 ₽
+                  </option>
+                </select>
+              </label>
 
-              <select
-                value={timeFilter}
-                onChange={(event) => setTimeFilter(event.target.value)}
-                className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2.5 text-sm text-white outline-none transition focus:border-cyan-300/50"
-              >
-                <option value="all" className="bg-[#0b1020]">
-                  Время: любое
-                </option>
-                <option value="morning" className="bg-[#0b1020]">
-                  Утро (до 12:00)
-                </option>
-                <option value="day" className="bg-[#0b1020]">
-                  День (12:00–18:00)
-                </option>
-                <option value="evening" className="bg-[#0b1020]">
-                  Вечер (18:00–23:00)
-                </option>
-                <option value="night" className="bg-[#0b1020]">
-                  Ночь (после 23:00)
-                </option>
-              </select>
+              <label className="relative">
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
+                <select
+                  value={timeFilter}
+                  onChange={(event) => setTimeFilter(event.target.value)}
+                  className="w-full appearance-none rounded-xl border border-white/12 bg-white/[0.03] py-2.5 pl-3 pr-9 text-sm text-white outline-none transition focus:border-cyan-300/50"
+                >
+                  <option value="all" className="bg-[#0b1020]">
+                    Время: любое
+                  </option>
+                  <option value="morning" className="bg-[#0b1020]">
+                    Утро (до 12:00)
+                  </option>
+                  <option value="day" className="bg-[#0b1020]">
+                    День (12:00–18:00)
+                  </option>
+                  <option value="evening" className="bg-[#0b1020]">
+                    Вечер (18:00–23:00)
+                  </option>
+                  <option value="night" className="bg-[#0b1020]">
+                    Ночь (после 23:00)
+                  </option>
+                </select>
+              </label>
 
-              <select
-                value={cinemaFilter}
-                onChange={(event) => setCinemaFilter(event.target.value)}
-                className="w-full max-w-xs rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2.5 text-sm text-white outline-none transition focus:border-cyan-300/50"
-              >
+              <label className="relative">
+                <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
+                <select
+                  value={cinemaFilter}
+                  onChange={(event) => setCinemaFilter(event.target.value)}
+                  className="w-full max-w-xs appearance-none rounded-xl border border-white/12 bg-white/[0.03] py-2.5 pl-3 pr-9 text-sm text-white outline-none transition focus:border-cyan-300/50"
+                >
                 <option value="all" className="bg-[#0b1020]">
                   Кинотеатр: все
                 </option>
@@ -1094,7 +1107,8 @@ export default function MainPage() {
                     {cinemaName}
                   </option>
                 ))}
-              </select>
+                </select>
+              </label>
             </div>
             {adm && (
               <button
@@ -1120,8 +1134,8 @@ export default function MainPage() {
                 {adm && (
                   <button
                     type="button"
-                    onClick={() => deleteMovieById(movie.id)}
-                    className="group/delete absolute right-4 top-4 z-20 inline-flex items-center rounded-xl border border-rose-300/60 bg-gradient-to-r from-rose-500/90 to-red-500/85 px-2.5 py-1.5 text-white shadow-[0_10px_24px_rgba(244,63,94,0.38)] transition-all duration-200 hover:-translate-y-0.5 hover:from-rose-400/95 hover:to-red-400/90"
+                    onClick={() => setMovieToDelete(movie)}
+                    className="group/delete absolute right-4 top-4 z-20 inline-flex items-center rounded-xl border border-rose-300/60 bg-gradient-to-r from-rose-500/90 to-red-500/85 px-2.5 py-1.5 text-white shadow-[0_10px_24px_rgba(244,63,94,0.38)] transition-all duration-200 hover:from-rose-400/95 hover:to-red-400/90"
                   >
                     <span className="text-base leading-none">×</span>
                     <span className="ml-0 max-w-0 overflow-hidden whitespace-nowrap text-xs font-semibold opacity-0 transition-all duration-500 group-hover/delete:ml-2 group-hover/delete:max-w-24 group-hover/delete:opacity-100">
@@ -1522,6 +1536,47 @@ export default function MainPage() {
                 className="w-full rounded-xl bg-pink-500 py-2 font-semibold text-white hover:bg-pink-400 transition"
               >
                 Закрыть
+              </button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(movieToDelete)}
+        onClose={() => setMovieToDelete(null)}
+        className="relative z-50"
+      >
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="glass-card w-full max-w-sm rounded-2xl p-6">
+            <div className="mb-1">
+              <h3 className="text-lg font-semibold text-white">Удалить фильм?</h3>
+            </div>
+            <p className="mt-3 text-sm text-white/65 leading-relaxed">
+              Вы уверены, что хотите удалить{" "}
+              <span className="font-semibold text-white/90">
+                «{movieToDelete?.title}»
+              </span>
+              ? Это действие необратимо.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setMovieToDelete(null)}
+                className="flex-1 rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/10"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteMovieById(movieToDelete.id);
+                  setMovieToDelete(null);
+                }}
+                className="flex-1 rounded-xl border border-rose-400/40 bg-gradient-to-r from-rose-500/90 to-red-500/85 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(244,63,94,0.3)] transition hover:from-rose-400 hover:to-red-400"
+              >
+                Удалить
               </button>
             </div>
           </DialogPanel>
