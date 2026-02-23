@@ -40,20 +40,18 @@ const promotions = [
   },
 ];
 
+const emptyForm = { title: "", subtitle: "", description: "", details: "" };
+
 export default function PromotionPage() {
   const { adm } = useAuth();
   const [selectedPromo, setSelectedPromo] = useState(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [promoList, setPromoList] = useState(promotions);
-  const [form, setForm] = useState({
-    title: "",
-    subtitle: "",
-    description: "",
-    details: "",
-  });
-
+  const [promoToDelete, setPromoToDelete] = useState(null);
+  const [form, setForm] = useState(emptyForm);
+  
   const openAdd = () => {
-    setForm({ title: "", subtitle: "", description: "", details: "" });
+    setForm(emptyForm);
     setIsAddOpen(true);
   };
 
@@ -89,7 +87,7 @@ export default function PromotionPage() {
           ещё приятнее.
         </p>
 
-        <div className="mt-8 ml-8 mr-8 grid gap-6 ">
+        <div className="mt-8 grid gap-6 ">
           {promoList.map((promo) => (
             <article
               key={promo.id}
@@ -110,6 +108,7 @@ export default function PromotionPage() {
 
                 <div className="flex flex-col items-end gap-2">
                   <button
+                    type="button"
                     onClick={() => setSelectedPromo(promo)}
                     className="rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-300/20"
                   >
@@ -117,6 +116,7 @@ export default function PromotionPage() {
                   </button>
                   {adm && (
                     <button
+                      type="button"
                       onClick={() => deletePromo(promo.id)}
                       className="mt-2 rounded-xl border border-rose-300/50 bg-rose-500/10 px-3 py-1 text-sm font-semibold text-rose-300 transition hover:bg-rose-500/20"
                     >
@@ -130,13 +130,15 @@ export default function PromotionPage() {
         </div>
 
         {adm && (
-          <button
-            type="button"
-            onClick={openAdd}
-            className="absolute bottom-8 right-8 inline-flex max-w-full whitespace-normal rounded-xl border border-pink-300/50 bg-gradient-to-r from-pink-500/80 to-fuchsia-500/80 px-4 py-2 text-left text-sm font-semibold leading-snug text-white shadow-[0_10px_24px_rgba(236,72,153,0.35)] transition hover:from-pink-400/90 hover:to-fuchsia-400/90"
-          >
-            Добавить акцию
-          </button>
+          <div className="mt-6 flex justify-end">
+            <button
+              type="button"
+              onClick={openAdd}
+              className="inline-flex whitespace-normal rounded-xl border border-pink-300/50 bg-gradient-to-r from-pink-500/80 to-fuchsia-500/80 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(236,72,153,0.35)] transition hover:from-pink-400/90 hover:to-fuchsia-400/90"
+            >
+              Добавить акцию
+            </button>
+          </div>
         )}
       </main>
 
@@ -162,8 +164,9 @@ export default function PromotionPage() {
             </div>
             <div className="mt-6 flex gap-3">
               <button
+                type="button"
                 onClick={() => setSelectedPromo(null)}
-                className="w-full rounded-xl bg-pink-500 py-2 font-semibold text-white hover:bg-pink-400 transition"
+                className="w-full rounded-xl border border-white/15 bg-white/5 py-2 font-semibold text-white hover:bg-pink-400 transition"
               >
                 Закрыть
               </button>
@@ -228,16 +231,57 @@ export default function PromotionPage() {
             </div>
             <div className="mt-6 flex gap-3">
               <button
+                type="button"
                 onClick={saveNewPromo}
                 className="w-full rounded-xl bg-emerald-500 py-2 font-semibold text-white hover:bg-emerald-400 transition"
               >
                 Сохранить
               </button>
               <button
+                type="button"
                 onClick={() => setIsAddOpen(false)}
                 className="w-full rounded-xl bg-pink-500 py-2 font-semibold text-white hover:bg-pink-400 transition"
               >
                 Отмена
+              </button>
+            </div>
+          </DialogPanel>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(promoToDelete)}
+        onClose={() => setPromoToDelete(null)}
+        className="relative z-50"
+      >
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <DialogPanel className="glass-card w-full max-w-sm rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-white">Удалить акцию?</h3>
+            <p className="mt-3 text-sm text-white/65 leading-relaxed">
+              Вы уверены, что хотите удалить{" "}
+              <span className="font-semibold text-white/90">
+                «{promoToDelete?.title}»
+              </span>
+              ? Это действие необратимо.
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setPromoToDelete(null)}
+                className="flex-1 rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/10"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deletePromo(promoToDelete.id);
+                  setPromoToDelete(null);
+                }}
+                className="flex-1 rounded-xl border border-rose-400/40 bg-gradient-to-r from-rose-500/90 to-red-500/85 py-2.5 text-sm font-semibold text-white transition hover:from-rose-400 hover:to-red-400"
+              >
+                Удалить
               </button>
             </div>
           </DialogPanel>
