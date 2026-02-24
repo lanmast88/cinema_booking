@@ -27,6 +27,7 @@ import movie10child from "../assets/movie10child.webp";
 import movie11child from "../assets/movie11child.png";
 import movie12 from "../assets/movie12.webp";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useAuth } from "../components/useAuth";
 // import { CinemaSeatIcon, CinemaScreenIcon } from "../assets/Icons";
 
@@ -1235,6 +1236,7 @@ export default function MainPage() {
           </div>
         </section>
       </main>
+      <Footer />
 
       <Dialog
         open={Boolean(selectedSession)}

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useAuth } from "../components/useAuth";
 
 const orderHistoryMock = [
@@ -103,8 +104,10 @@ export default function UserPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#0a0c14] to-[#070911] text-white">
+    <div className="relative min-h-screen overflow-hidden bg-[#070911] text-white">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(74,58,255,0.28),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(0,188,255,0.22),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(169,0,255,0.16),transparent_45%)]" />
+      <div className="pointer-events-none absolute -left-20 top-32 h-72 w-72 rounded-full bg-[#5f3bff]/25 blur-3xl animate-pulse-glow" />
+      <div className="pointer-events-none absolute right-0 top-14 h-80 w-80 rounded-full bg-[#00b7ff]/20 blur-3xl animate-pulse-glow-delayed" />
       <Header />
 
       <main className="relative z-10 mx-auto max-w-5xl px-6 pb-16 pt-28 lg:px-10">
@@ -252,6 +255,7 @@ export default function UserPage() {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   );
 }

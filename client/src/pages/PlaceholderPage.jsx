@@ -1,4 +1,5 @@
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 export default function PlaceholderPage({ title }) {
   return (
@@ -13,6 +14,7 @@ export default function PlaceholderPage({ title }) {
           <p className="mt-3 text-white/70">Раздел в разработке</p>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
