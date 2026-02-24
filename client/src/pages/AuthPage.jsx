@@ -2,25 +2,44 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { useAuth } from "../components/useAuth";
+import { register as registerApi } from "../api/auth";
 
 export default function AuthPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("login");
-  const [name, setName] = useState("Тестовый пользователь");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
 
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault();
-    login({ name: name || "Пользователь", email, password });
-    navigate("/");
+    setError("");
+    setLoading(true);
+    try {
+      await login(email, password);
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Неверный email или пароль.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRegister = (event) => {
+  const handleRegister = async (event) => {
     event.preventDefault();
-    login({ name: name || "Новый пользователь", email, password });
-    navigate("/");
+    setError("");
+    setLoading(true);
+    try {
+      await registerApi(email, password);
+      await login(email, password);
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Ошибка при регистрации.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -86,6 +105,12 @@ export default function AuthPage() {
             </button>
           </div>
 
+          {error && (
+            <div className="mb-4 rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-300">
+              {error}
+            </div>
+          )}
+
           {mode === "login" ? (
             <form className="space-y-4" onSubmit={handleLogin}>
               <h2 className="text-2xl font-semibold">Вход в аккаунт</h2>
@@ -94,6 +119,7 @@ export default function AuthPage() {
                 <input
                   type="email"
                   placeholder="you@example.com"
+                  value={email}
                   className="w-full rounded-xl border border-white/12 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition focus:border-cyan-300/50"
                   onChange={(event) => setEmail(event.target.value)}
                 />
@@ -103,33 +129,27 @@ export default function AuthPage() {
                 <input
                   type="password"
                   placeholder="Введите пароль"
+                  value={password}
                   className="w-full rounded-xl border border-white/12 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition focus:border-cyan-300/50"
                   onChange={(event) => setPassword(event.target.value)}
                 />
               </label>
               <button
                 type="submit"
-                className="btn-glossy w-full rounded-xl px-4 py-3 text-sm font-semibold"
+                disabled={loading}
+                className="btn-glossy w-full rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50"
               >
-                Войти
+                {loading ? "Входим..." : "Войти"}
               </button>
             </form>
           ) : (
             <form className="space-y-4" onSubmit={handleRegister}>
               <h2 className="text-2xl font-semibold">Создать аккаунт</h2>
               <label className="block">
-                <span className="mb-2 block text-sm text-white/70">Имя</span>
-                <input
-                  type="text"
-                  placeholder="Ваше имя"
-                  onChange={(event) => setName(event.target.value)}
-                  className="w-full rounded-xl border border-white/12 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition focus:border-cyan-300/50"
-                />
-              </label>
-              <label className="block">
                 <span className="mb-2 block text-sm text-white/70">Email</span>
                 <input
                   type="email"
+                  value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@example.com"
                   className="w-full rounded-xl border border-white/12 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition focus:border-cyan-300/50"
@@ -140,15 +160,17 @@ export default function AuthPage() {
                 <input
                   type="password"
                   placeholder="Минимум 8 символов"
+                  value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   className="w-full rounded-xl border border-white/12 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder:text-white/35 outline-none transition focus:border-cyan-300/50"
                 />
               </label>
               <button
                 type="submit"
-                className="btn-glossy w-full rounded-xl px-4 py-3 text-sm font-semibold"
+                disabled={loading}
+                className="btn-glossy w-full rounded-xl px-4 py-3 text-sm font-semibold disabled:opacity-50"
               >
-                Зарегистрироваться
+                {loading ? "Регистрируем..." : "Зарегистрироваться"}
               </button>
             </form>
           )}
