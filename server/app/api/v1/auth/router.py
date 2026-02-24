@@ -77,7 +77,6 @@ async def login(
     token = auth_utils.encode_jwt({"sub": user.email, "role": user.role})
     return TokenInfo(access_token=token)
 
-
 @router.get(
     "/me",
     response_model=UserOut,
