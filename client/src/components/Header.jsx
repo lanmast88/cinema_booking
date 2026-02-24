@@ -1,11 +1,10 @@
 import { NavLink } from "react-router-dom";
 import logo from "../assets/logo.png";
 import { useAuth } from "./useAuth";
+import BurgerMenu from "./BurgerMenu";
 
 const navButtons = [
-  { label: "Афиша", to: "/" },
   { label: "Расписание", to: "/schedule" },
-  { label: "Кинотеатры", to: "/cinemas" },
   { label: "Акции", to: "/offers" },
 ];
 
@@ -44,29 +43,33 @@ export default function Header() {
           ))}
         </div>
 
-        {user ? (
-          <div className="flex items-center gap-2">
-            <NavLink to="/user">
-              <span className="hidden rounded-lg border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white/85 sm:inline-flex">
-                {user.name || user.email}
-              </span>
-            </NavLink>
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-xl border border-red-300/35 bg-red-300/10 px-4 py-2 text-sm font-semibold text-red-100 transition hover:border-red-200/60 hover:bg-red-300/20"
+        <div className="flex items-center gap-2">
+          {user ? (
+            <div className="hidden items-center gap-2 md:flex">
+              <NavLink to="/user">
+                <span className="hidden rounded-lg border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white/85 sm:inline-flex">
+                  {user.name || user.email}
+                </span>
+              </NavLink>
+              <button
+                type="button"
+                onClick={logout}
+                className="rounded-xl border border-red-300/35 bg-red-300/10 px-4 py-2 text-sm font-semibold text-red-100 transition hover:border-red-200/60 hover:bg-red-300/20"
+              >
+                Выйти
+              </button>
+            </div>
+          ) : (
+            <NavLink
+              to="/auth"
+              className="btn-glossy hidden rounded-xl px-4 py-2 text-sm font-semibold text-white/90 hover:text-white md:inline-flex"
             >
-              Выйти
-            </button>
-          </div>
-        ) : (
-          <NavLink
-            to="/auth"
-            className="btn-glossy rounded-xl px-4 py-2 text-sm font-semibold text-white/90 hover:text-white"
-          >
-            Вход / Регистрация
-          </NavLink>
-        )}
+              Вход / Регистрация
+            </NavLink>
+          )}
+
+          <BurgerMenu navButtons={navButtons} user={user} logout={logout} />
+        </div>
       </div>
     </header>
   );

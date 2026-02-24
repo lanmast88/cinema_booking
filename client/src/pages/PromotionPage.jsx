@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useAuth } from "../components/useAuth";
 
 const promotions = [
@@ -141,6 +142,7 @@ export default function PromotionPage() {
           </div>
         )}
       </main>
+      <Footer />
 
       <Dialog
         open={Boolean(selectedPromo)}

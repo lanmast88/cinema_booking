@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
+import Footer from "../components/Footer";
 import { useAuth } from "../components/useAuth";
 import { register as registerApi } from "../api/auth";
 
@@ -176,6 +177,7 @@ export default function AuthPage() {
           )}
         </section>
       </main>
+      <Footer />
     </div>
   );
 }
