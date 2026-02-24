@@ -1,9 +1,10 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.api.v1.auth.deps import require_role
 from app.db.database import get_db
@@ -11,6 +12,42 @@ from app.models.models import Hall, Movie, Screening, Ticket, User
 from app.schemas.screening import ScreeningCreate, ScreeningOut, ScreeningUpdate
 
 router = APIRouter(prefix="/screenings", tags=["Screenings"])
+
+
+async def _check_hall_overlap(
+    db: AsyncSession,
+    hall_id: int,
+    start_time: datetime,
+    duration_min: int,
+    exclude_id: int | None = None,
+) -> None:
+    """Проверяет, не пересекается ли новый сеанс с уже существующими в том же зале."""
+    end_time = start_time + timedelta(minutes=duration_min)
+
+    query = (
+        select(Screening)
+        .options(selectinload(Screening.movie))
+        .where(
+            Screening.hall_id == hall_id,
+            Screening.start_time < end_time,
+        )
+    )
+    if exclude_id is not None:
+        query = query.where(Screening.id != exclude_id)
+
+    result = await db.execute(query)
+    candidates = result.scalars().all()
+
+    for s in candidates:
+        s_end = s.start_time + timedelta(minutes=s.movie.duration_min)
+        if s_end > start_time:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"Сеанс пересекается с уже существующим сеансом (id={s.id}): "
+                    f"{s.start_time.strftime('%d.%m.%Y %H:%M')}–{s_end.strftime('%H:%M')}."
+                ),
+            )
 
 
 class SeatStatus(BaseModel):
@@ -117,6 +154,16 @@ async def update_screening(
     if screening is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сеанс не найден.")
 
+    if screening_data.start_time is not None:
+        movie = await db.get(Movie, screening.movie_id)
+        await _check_hall_overlap(
+            db,
+            hall_id=screening.hall_id,
+            start_time=screening_data.start_time,
+            duration_min=movie.duration_min,
+            exclude_id=screening_id,
+        )
+
     for field, value in screening_data.model_dump(exclude_unset=True).items():
         setattr(screening, field, value)
 
@@ -162,6 +209,13 @@ async def create_screening(
     hall = await db.get(Hall, screening_data.hall_id)
     if hall is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Зал не найден.")
+
+    await _check_hall_overlap(
+        db,
+        hall_id=screening_data.hall_id,
+        start_time=screening_data.start_time,
+        duration_min=movie.duration_min,
+    )
 
     screening = Screening(
         movie_id=screening_data.movie_id,

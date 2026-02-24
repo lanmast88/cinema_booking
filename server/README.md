@@ -19,11 +19,14 @@ REST API для сервиса бронирования билетов в кин
 
 ### 1. Установить зависимости
 
+Проект использует [uv](https://docs.astral.sh/uv/) для управления зависимостями.
+
 ```bash
+# Установить uv (если ещё не установлен)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
 cd server
-python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
-pip install -r requirements.txt
+uv sync          # создаёт .venv и устанавливает все зависимости
 ```
 
 ### 2. Настроить переменные окружения
@@ -54,7 +57,7 @@ alembic upgrade head
 ### 5. Запустить сервер
 
 ```bash
-uvicorn app.main:app --reload
+uv run uvicorn app.main:app --reload
 ```
 
 API будет доступен на `http://localhost:8000`.
@@ -126,14 +129,14 @@ Authorization: Bearer <token>
 
 ```bash
 # Применить все миграции
-alembic upgrade head
+uv run alembic upgrade head
 
 # Создать новую миграцию после изменения моделей
-alembic revision --autogenerate -m "описание"
+uv run alembic revision --autogenerate -m "описание"
 
 # Откатить последнюю миграцию
-alembic downgrade -1
+uv run alembic downgrade -1
 
 # Текущее состояние БД
-alembic current
+uv run alembic current
 ```
