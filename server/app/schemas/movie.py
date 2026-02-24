@@ -7,6 +7,7 @@ class MovieBase(OrmBase):
     name: str
     description: Optional[str] = None
     duration_min: int
+    poster_url: Optional[str] = None
 
 
 class MovieCreate(MovieBase):
@@ -17,6 +18,7 @@ class MovieUpdate(OrmBase):
     name: Optional[str] = None
     description: Optional[str] = None
     duration_min: Optional[int] = None
+    poster_url: Optional[str] = None
 
 
 class MovieOut(MovieBase):

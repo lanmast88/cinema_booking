@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
+    JSON,
     Numeric,
     String,
     Text,
@@ -34,6 +35,10 @@ class Cinema(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     address = Column(Text, nullable=True)
+    city = Column(String(100), nullable=True)
+    description = Column(Text, nullable=True)
+    image_urls = Column(JSON, nullable=True)   # list[str]
+    advantages = Column(JSON, nullable=True)   # list[str]
 
     halls = relationship("Hall", back_populates="cinema", cascade="all, delete-orphan")
 
@@ -62,6 +67,7 @@ class Movie(Base):
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     duration_min = Column(Integer, nullable=False)  # минуты
+    poster_url = Column(String(512), nullable=True)
 
     screenings = relationship(
         "Screening",
@@ -78,6 +84,7 @@ class Screening(Base):
     hall_id = Column(Integer, ForeignKey("hall.id", ondelete="CASCADE"), nullable=False)
     start_time = Column(DateTime, nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
+    format = Column(String(50), nullable=True)  # 2D / IMAX / Dolby / 3D
 
     movie = relationship("Movie", back_populates="screenings")
     hall = relationship("Hall", back_populates="screenings")

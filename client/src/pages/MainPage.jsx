@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import {
   CalendarDaysIcon,
@@ -8,12 +8,6 @@ import {
   MagnifyingGlassIcon,
   MapPinIcon,
 } from "@heroicons/react/24/outline";
-import cinema1Main from "../assets/cinema1.jpg";
-import cinema1Alt1 from "../assets/cinema1-1.jpg";
-import cinema1Alt2 from "../assets/cinema1-2.jpg";
-import cinema2Main from "../assets/cinema2.jpg";
-import cinema2Alt1 from "../assets/cinema2-1.jpg";
-import cinema2Alt2 from "../assets/cinema2-2.jpg";
 import movie1 from "../assets/movie1.jpg";
 import movie2 from "../assets/movie2.webp";
 import movie3 from "../assets/movie3.webp";
@@ -31,30 +25,7 @@ import Footer from "../components/Footer";
 import { useAuth } from "../components/useAuth";
 // import { CinemaSeatIcon, CinemaScreenIcon } from "../assets/Icons";
 
-const cinemaCards = [
-  {
-    id: "cinema-1",
-    name: "Cinema Star",
-    city: "Москва",
-    description:
-      "Флагманский кинотеатр в центре города с премиальными залами, Dolby Atmos и отдельной lounge-зоной.",
-    advantages: ["IMAX и Dolby Atmos", "Реклайнер-кресла", "Фуд-корт и лаунж"],
-    images: [cinema1Main, cinema1Alt1, cinema1Alt2],
-  },
-  {
-    id: "cinema-2",
-    name: "Nova Cinema",
-    city: "Санкт-Петербург",
-    description:
-      "Современный киноцентр у набережной: просторные залы, удобная парковка и семейные форматы показов.",
-    advantages: [
-      "Детские утренние сеансы",
-      "Бесплатная парковка",
-      "VIP-зал с сервисом",
-    ],
-    images: [cinema2Main, cinema2Alt1, cinema2Alt2],
-  },
-];
+import { getCinemas } from "../api/cinemas";
 
 const scheduleMovies = [
   {
@@ -633,10 +604,7 @@ function getHour(time) {
 }
 
 export default function MainPage() {
-  const [activeSlides, setActiveSlides] = useState({
-    "cinema-1": 0,
-    "cinema-2": 0,
-  });
+  const [activeSlides, setActiveSlides] = useState({});
 
   const dayTabs = useMemo(() => {
     return Array.from({ length: 4 }, (_, offset) => {
@@ -660,6 +628,13 @@ export default function MainPage() {
   const [moviesData, setMoviesData] = useState(scheduleMovies);
   const [adminSession, setAdminSession] = useState(null);
   const [adminForm, setAdminForm] = useState(emptyAdminForm);
+  const [cinemas, setCinemas] = useState([]);
+
+  useEffect(() => {
+    getCinemas()
+      .then((res) => setCinemas(res.data))
+      .catch(() => {});
+  }, []);
 
   const plusChosenSeat = (row, seat) => {
     setChosenSeats((prev) => {
@@ -899,7 +874,7 @@ export default function MainPage() {
         </h1>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-2">
-          {cinemaCards.map((cinema) => {
+          {cinemas.map((cinema) => {
             const currentSlide = activeSlides[cinema.id] ?? 0;
 
             return (
@@ -910,7 +885,7 @@ export default function MainPage() {
                 <div className="grid gap-5 md:grid-cols-[44%_56%] md:items-stretch">
                   <div className="relative min-h-64 overflow-hidden rounded-2xl border border-white/10">
                     <img
-                      src={cinema.images[currentSlide]}
+                      src={(cinema.image_urls ?? [])[currentSlide]}
                       alt={`${cinema.name} ${currentSlide + 1}`}
                       className="h-full w-full object-cover"
                     />
@@ -919,7 +894,7 @@ export default function MainPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          shiftSlide(cinema.id, -1, cinema.images.length)
+                          shiftSlide(cinema.id, -1, (cinema.image_urls ?? []).length)
                         }
                         className="rounded-lg border border-white/20 bg-black/40 p-1.5 text-white/85 transition hover:border-cyan-300/50 hover:text-cyan-100"
                         aria-label="Предыдущее фото"
@@ -928,7 +903,7 @@ export default function MainPage() {
                       </button>
 
                       <div className="flex items-center gap-1.5">
-                        {cinema.images.map((_, dotIndex) => (
+                        {(cinema.image_urls ?? []).map((_, dotIndex) => (
                           <span
                             key={dotIndex}
                             className={`h-1.5 rounded-full transition-all ${
@@ -943,7 +918,7 @@ export default function MainPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          shiftSlide(cinema.id, 1, cinema.images.length)
+                          shiftSlide(cinema.id, 1, (cinema.image_urls ?? []).length)
                         }
                         className="rounded-lg border border-white/20 bg-black/40 p-1.5 text-white/85 transition hover:border-cyan-300/50 hover:text-cyan-100"
                         aria-label="Следующее фото"

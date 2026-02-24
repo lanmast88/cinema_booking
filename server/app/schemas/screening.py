@@ -10,6 +10,7 @@ class ScreeningBase(OrmBase):
     hall_id: int
     start_time: datetime
     price: Decimal
+    format: Optional[str] = None
 
 
 class ScreeningCreate(ScreeningBase):
@@ -19,6 +20,7 @@ class ScreeningCreate(ScreeningBase):
 class ScreeningUpdate(OrmBase):
     start_time: Optional[datetime] = None
     price: Optional[Decimal] = None
+    format: Optional[str] = None
 
 
 class ScreeningOut(ScreeningBase):
