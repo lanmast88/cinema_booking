@@ -8,6 +8,7 @@ import AdminSessionModal from "../features/main/components/AdminSessionModal";
 import DeleteMovieDialog from "../features/main/components/DeleteMovieDialog";
 import CinemaCardsSection from "../features/main/components/CinemaCardsSection";
 import DataFilters from "../features/main/components/DataFilters";
+import MovieScheduleSection from "../features/main/components/MovieScheduleSection";
 import {
   emptyAdminForm,
   scheduleMovies,
@@ -48,11 +49,13 @@ export default function MainPage() {
   const [adminSession, setAdminSession] = useState(null);
   const [adminForm, setAdminForm] = useState(emptyAdminForm);
   const [cinemas, setCinemas] = useState([]);
+  const [cinemasLoading, setCinemasLoading] = useState(true);
 
   useEffect(() => {
     getCinemas()
       .then((res) => setCinemas(res.data))
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setCinemasLoading(false));
   }, []);
 
   const plusChosenSeat = (row, seat) => {
@@ -294,6 +297,7 @@ export default function MainPage() {
 
         <CinemaCardsSection
           cinemas={cinemas}
+          loading={cinemasLoading}
           activeSlides={activeSlides}
           shiftSlide={shiftSlide}
           selectCinemaFilter={selectCinemaFilter}
