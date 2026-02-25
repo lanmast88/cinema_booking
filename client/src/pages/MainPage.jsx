@@ -8,6 +8,7 @@ import AdminSessionModal from "../features/main/components/AdminSessionModal";
 import DeleteMovieDialog from "../features/main/components/DeleteMovieDialog";
 import CinemaCardsSection from "../features/main/components/CinemaCardsSection";
 import DataFilters from "../features/main/components/DataFilters";
+import MovieScheduleSection from "../features/main/components/MovieScheduleSection";
 import {
   emptyAdminForm,
   scheduleMovies,
