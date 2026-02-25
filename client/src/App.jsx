@@ -10,11 +10,11 @@ function App() {
     <Routes>
       <Route path="/" element={<MainPage />} />
       <Route path="/auth" element={<AuthPage />} />
-      <Route
-        path="/schedule"
-        element={<PlaceholderPage title="Расписание" />}
-      />
+      <Route path="/schedule" element={<Navigate to="/" replace />} />
       <Route path="/cinemas" element={<PlaceholderPage title="Кинотеатры" />} />
+      <Route path="/events" element={<PlaceholderPage title="События" />} />
+      <Route path="/sport" element={<PlaceholderPage title="Спорт" />} />
+      <Route path="/rent" element={<PlaceholderPage title="Аренда зала" />} />
       <Route path="/offers" element={<PromotionPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
       <Route path="/user" element={<UserPage />} />

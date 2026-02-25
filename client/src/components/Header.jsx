@@ -4,7 +4,10 @@ import { useAuth } from "./useAuth";
 import BurgerMenu from "./BurgerMenu";
 
 const navButtons = [
-  { label: "Расписание", to: "/schedule" },
+  { label: "Расписание", to: "/" },
+  { label: "События", to: "/events" },
+  { label: "Спорт", to: "/sport" },
+  { label: "Аренда зала", to: "/rent" },
   { label: "Акции", to: "/offers" },
 ];
 
@@ -30,6 +33,7 @@ export default function Header() {
             <NavLink
               key={item.to}
               to={item.to}
+              end
               className={({ isActive }) =>
                 `rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                   isActive
