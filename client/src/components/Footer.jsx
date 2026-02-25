@@ -1,9 +1,10 @@
 import { NavLink } from "react-router-dom";
 
 const mainLinks = [
-  { to: "/", label: "Главная" },
-  { to: "/schedule", label: "Расписание" },
-  { to: "/cinemas", label: "Кинотеатры" },
+  { to: "/", label: "Расписание" },
+  { to: "/events", label: "События" },
+  { to: "/sport", label: "Спорт" },
+  { to: "/rent", label: "Аренда зала" },
   { to: "/offers", label: "Акции" },
 ];
 
@@ -18,8 +19,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative z-20 mt-12 overflow-hidden border-t border-white/10 bg-[#070911]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(74,58,255,0.2),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(0,188,255,0.16),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(169,0,255,0.12),transparent_45%)]" />
+    <footer className="relative z-20 mt-12 border-t border-white/10">
 
       <div className="relative mx-auto grid w-full max-w-7xl gap-8 px-6 py-10 md:grid-cols-3 lg:px-10">
         <div>
