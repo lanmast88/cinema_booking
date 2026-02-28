@@ -2,18 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../components/useAuth";
-import { getCinemas } from "../api/cinemas";
+import { getCinemas, getCinemaHalls } from "../api/cinemas";
+import { getMovies } from "../api/movies";
 import SeatPickerModal from "../features/main/components/SeatPickerModal";
 import AdminSessionModal from "../features/main/components/AdminSessionModal";
 import DeleteMovieDialog from "../features/main/components/DeleteMovieDialog";
 import CinemaCardsSection from "../features/main/components/CinemaCardsSection";
 import DataFilters from "../features/main/components/DataFilters";
 import MovieScheduleSection from "../features/main/components/MovieScheduleSection";
-import {
-  emptyAdminForm,
-  scheduleMovies,
-  seatsData,
-} from "../features/main/data/scheduleMovies";
+import { emptyAdminForm, seatsData } from "../features/main/data/scheduleMovies";
 import {
   formatDateLabel,
   formatTabTitle,
@@ -45,18 +42,114 @@ export default function MainPage() {
   const [cinemaFilter, setCinemaFilter] = useState("all");
   const [selectedSession, setSelectedSession] = useState(null);
   const [chosenSeats, setChosenSeats] = useState([]);
-  const [moviesData, setMoviesData] = useState(scheduleMovies);
+  const [moviesData, setMoviesData] = useState([]);
   const [adminSession, setAdminSession] = useState(null);
   const [adminForm, setAdminForm] = useState(emptyAdminForm);
   const [cinemas, setCinemas] = useState([]);
   const [cinemasLoading, setCinemasLoading] = useState(true);
 
   useEffect(() => {
-    getCinemas()
-      .then((res) => setCinemas(res.data))
-      .catch(() => {})
-      .finally(() => setCinemasLoading(false));
-  }, []);
+    let isCancelled = false;
+
+    const loadData = async () => {
+      try {
+        const [cinemasRes, moviesRes] = await Promise.all([
+          getCinemas(),
+          getMovies(),
+        ]);
+
+        if (isCancelled) return;
+
+        const cinemasData = cinemasRes.data ?? [];
+        setCinemas(cinemasData);
+
+        // Загрузка залов для каждого кинотеатра, чтобы построить карту hall_id → {hallName, cinemaName}
+        const hallsResponses = await Promise.all(
+          cinemasData.map((cinema) =>
+            getCinemaHalls(cinema.id).then((res) => ({
+              cinema,
+              halls: res.data ?? [],
+            })),
+          ),
+        );
+
+        if (isCancelled) return;
+
+        const hallInfoById = {};
+        hallsResponses.forEach(({ cinema, halls }) => {
+          halls.forEach((hall) => {
+            hallInfoById[hall.id] = {
+              hallName: hall.name,
+              cinemaName: cinema.name,
+            };
+          });
+        });
+
+        const allHallInfos = Object.values(hallInfoById);
+        const fallbackHallInfos =
+          allHallInfos.length > 0
+            ? allHallInfos
+            : [{ hallName: "Зал 1", cinemaName: "Cinema Star" }];
+
+        const apiMovies = moviesRes.data ?? [];
+        const timeSlots = ["10:20", "12:40", "15:10", "17:40", "20:15", "22:30"];
+
+        const moviesFromApi = apiMovies.map((movie, movieIndex) => {
+          const totalMinutes = movie.duration_min ?? 0;
+          const hours = Math.floor(totalMinutes / 60);
+          const minutes = totalMinutes % 60;
+          const durationLabel =
+            hours > 0 ? `${hours}ч ${minutes}м` : `${minutes}м`;
+
+          const sessionsPerMovie = 3 + (movieIndex % 4); // 3–6 сеансов
+          const screenings = [];
+
+          for (let i = 0; i < sessionsPerMovie; i += 1) {
+            const time =
+              timeSlots[(movieIndex + i) % timeSlots.length];
+            const basePrice = 450 + (movieIndex % 4) * 50;
+            const price = basePrice + i * 30;
+            const hallInfo =
+              fallbackHallInfos[(movieIndex + i) % fallbackHallInfos.length];
+
+            dayTabs.forEach((_, dayOffset) => {
+              screenings.push({
+                dayOffset,
+                time,
+                price,
+                format: "2D",
+                hall: hallInfo.hallName,
+                cinema: hallInfo.cinemaName,
+              });
+            });
+          }
+
+          return {
+            id: String(movie.id),
+            title: movie.name,
+            genre: movie.description || "",
+            duration: durationLabel,
+            poster: movie.poster_url || "",
+            screenings,
+          };
+        });
+
+        setMoviesData(moviesFromApi);
+      } catch {
+        // В случае ошибки просто оставляем данные пустыми,
+      } finally {
+        if (!isCancelled) {
+          setCinemasLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [dayTabs]);
 
   const plusChosenSeat = (row, seat) => {
     setChosenSeats((prev) => {
@@ -159,7 +252,9 @@ export default function MainPage() {
     return moviesData
       .map((movie) => {
         const screenings = movie.screenings.filter((session) => {
-          const sessionDate = toDateKey(getDateByOffset(session.dayOffset));
+          const sessionDate = toDateKey(
+            getDateByOffset(session.dayOffset ?? 0),
+          );
           if (sessionDate !== selectedDate) return false;
 
           if (cinemaFilter !== "all" && session.cinema !== cinemaFilter)
