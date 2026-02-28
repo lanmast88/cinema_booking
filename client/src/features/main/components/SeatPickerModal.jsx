@@ -8,7 +8,7 @@ export default function SeatPickerModal({
   chosenSeats,
   plusChosenSeat,
   removeChosenSeat,
-  plusPurchasedSeats,
+  onBuy,
 }) {
   return (
     <Dialog open={open} onClose={onClose} className="relative z-50">
@@ -112,7 +112,7 @@ export default function SeatPickerModal({
                 <div className="flex justify-center">
                   <button
                     className="mt-4 inline-flex items-center justify-center rounded-xl border border-emerald-300/40 bg-gradient-to-r from-emerald-500/90 via-green-500/90 to-teal-500/90 px-6 py-2.5 text-sm font-semibold tracking-wide text-white shadow-[0_12px_28px_rgba(16,185,129,0.35)] backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:from-emerald-400 hover:via-green-400 hover:to-teal-400 hover:shadow-[0_16px_34px_rgba(16,185,129,0.45)] active:translate-y-0 active:scale-[0.99]"
-                    onClick={() => plusPurchasedSeats(chosenSeats)}
+                    onClick={() => onBuy(chosenSeats)}
                   >
                     Купить
                   </button>

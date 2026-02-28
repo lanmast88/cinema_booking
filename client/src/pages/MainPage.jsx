@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../components/useAuth";
@@ -10,7 +11,10 @@ import DeleteMovieDialog from "../features/main/components/DeleteMovieDialog";
 import CinemaCardsSection from "../features/main/components/CinemaCardsSection";
 import DataFilters from "../features/main/components/DataFilters";
 import MovieScheduleSection from "../features/main/components/MovieScheduleSection";
-import { emptyAdminForm, seatsData } from "../features/main/data/scheduleMovies";
+import {
+  emptyAdminForm,
+  seatsData,
+} from "../features/main/data/scheduleMovies";
 import {
   formatDateLabel,
   formatTabTitle,
@@ -20,8 +24,57 @@ import {
   toDateKey,
 } from "../features/main/utils/date";
 
+function mergePurchasedSeatsIntoMovies(movies, payload) {
+  if (
+    !payload?.movieId ||
+    !payload?.session ||
+    !Array.isArray(payload?.seats)
+  ) {
+    return movies;
+  }
+
+  const { movieId, session, seats } = payload;
+  if (seats.length === 0) return movies;
+
+  return movies.map((movie) => {
+    if (movie.id !== movieId) return movie;
+
+    return {
+      ...movie,
+      screenings: movie.screenings.map((currentSession) => {
+        const isTargetSession =
+          currentSession.dayOffset === session.dayOffset &&
+          currentSession.time === session.time &&
+          currentSession.hall === session.hall &&
+          currentSession.cinema === session.cinema;
+
+        if (!isTargetSession) return currentSession;
+
+        const existingSeats = currentSession.purchasedSeats ?? [];
+        const mergedSeats = [...existingSeats];
+
+        seats.forEach(([row, seat]) => {
+          const alreadyExists = mergedSeats.some(
+            ([r, s]) => r === row && s === seat,
+          );
+          if (!alreadyExists) {
+            mergedSeats.push([row, seat]);
+          }
+        });
+
+        return {
+          ...currentSession,
+          purchasedSeats: mergedSeats,
+        };
+      }),
+    };
+  });
+}
+
 export default function MainPage() {
   const [activeSlides, setActiveSlides] = useState({});
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const dayTabs = useMemo(() => {
     return Array.from({ length: 4 }, (_, offset) => {
@@ -92,7 +145,14 @@ export default function MainPage() {
             : [{ hallName: "Зал 1", cinemaName: "Cinema Star" }];
 
         const apiMovies = moviesRes.data ?? [];
-        const timeSlots = ["10:20", "12:40", "15:10", "17:40", "20:15", "22:30"];
+        const timeSlots = [
+          "10:20",
+          "12:40",
+          "15:10",
+          "17:40",
+          "20:15",
+          "22:30",
+        ];
 
         const moviesFromApi = apiMovies.map((movie, movieIndex) => {
           const totalMinutes = movie.duration_min ?? 0;
@@ -105,8 +165,7 @@ export default function MainPage() {
           const screenings = [];
 
           for (let i = 0; i < sessionsPerMovie; i += 1) {
-            const time =
-              timeSlots[(movieIndex + i) % timeSlots.length];
+            const time = timeSlots[(movieIndex + i) % timeSlots.length];
             const basePrice = 450 + (movieIndex % 4) * 50;
             const price = basePrice + i * 30;
             const hallInfo =
@@ -134,7 +193,11 @@ export default function MainPage() {
           };
         });
 
-        setMoviesData(moviesFromApi);
+        const mergedMovies = mergePurchasedSeatsIntoMovies(
+          moviesFromApi,
+          location.state?.paidSession,
+        );
+        setMoviesData(mergedMovies);
       } catch {
         // В случае ошибки просто оставляем данные пустыми,
       } finally {
@@ -149,7 +212,7 @@ export default function MainPage() {
     return () => {
       isCancelled = true;
     };
-  }, [dayTabs]);
+  }, [dayTabs, location.state?.paidSession]);
 
   const plusChosenSeat = (row, seat) => {
     setChosenSeats((prev) => {
@@ -165,68 +228,26 @@ export default function MainPage() {
     );
   };
 
-  const plusPurchasedSeats = (seats) => {
+  const handleCheckout = (seats) => {
     if (!selectedSession || seats.length === 0) return;
 
-    setMoviesData((prev) =>
-      prev.map((movie) => {
-        if (movie.id !== selectedSession.movieId) return movie;
+    const seatsForPayment = seats.map(([row, seat]) => [row, seat]);
+    const sessionPrice = Number(selectedSession.session?.price) || 0;
 
-        return {
-          ...movie,
-          screenings: movie.screenings.map((session) => {
-            const isTargetSession =
-              session.dayOffset === selectedSession.session.dayOffset &&
-              session.time === selectedSession.session.time &&
-              session.hall === selectedSession.session.hall &&
-              session.cinema === selectedSession.session.cinema;
+    setSelectedSession(null);
 
-            if (!isTargetSession) return session;
-
-            const existingSeats = session.purchasedSeats ?? [];
-            const mergedSeats = [...existingSeats];
-
-            seats.forEach(([row, seat]) => {
-              const alreadyExists = mergedSeats.some(
-                ([r, s]) => r === row && s === seat,
-              );
-              if (!alreadyExists) {
-                mergedSeats.push([row, seat]);
-              }
-            });
-
-            return {
-              ...session,
-              purchasedSeats: mergedSeats,
-            };
-          }),
-        };
-      }),
-    );
-
-    setSelectedSession((prev) => {
-      if (!prev) return prev;
-      const existingSeats = prev.session.purchasedSeats ?? [];
-      const mergedSeats = [...existingSeats];
-
-      seats.forEach(([row, seat]) => {
-        const alreadyExists = mergedSeats.some(
-          ([r, s]) => r === row && s === seat,
-        );
-        if (!alreadyExists) {
-          mergedSeats.push([row, seat]);
-        }
-      });
-
-      return {
-        ...prev,
-        session: {
-          ...prev.session,
-          purchasedSeats: mergedSeats,
-        },
-      };
+    navigate("/payment", {
+      state: {
+        movieId: selectedSession.movieId,
+        movieTitle: selectedSession.movieTitle,
+        movieRating: selectedSession.movieRating,
+        movieGenre: selectedSession.movieGenre,
+        movieDuration: selectedSession.movieDuration,
+        session: selectedSession.session,
+        seats: seatsForPayment,
+        total: sessionPrice * seatsForPayment.length,
+      },
     });
-    setChosenSeats([]);
   };
 
   const allCinemas = useMemo(() => {
@@ -441,7 +462,7 @@ export default function MainPage() {
         chosenSeats={chosenSeats}
         plusChosenSeat={plusChosenSeat}
         removeChosenSeat={removeChosenSeat}
-        plusPurchasedSeats={plusPurchasedSeats}
+        onBuy={handleCheckout}
       />
       <AdminSessionModal
         open={isAdminPanelOpen}

@@ -1,4 +1,8 @@
-import { ChevronLeftIcon, ChevronRightIcon, MapPinIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  MapPinIcon,
+} from "@heroicons/react/24/outline";
 
 function CinemaCardSkeleton() {
   return (
@@ -31,7 +35,14 @@ function CinemaCardSkeleton() {
   );
 }
 
-export default function CinemaCardsSection({ cinemas, loading, activeSlides, shiftSlide, selectCinemaFilter }) {
+export default function CinemaCardsSection({
+  cinemas,
+  loading,
+  activeSlides,
+  shiftSlide,
+  selectCinemaFilter,
+}) {
+  const cinemasList = Array.isArray(cinemas) ? cinemas : [];
   if (loading) {
     return (
       <section className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -43,7 +54,7 @@ export default function CinemaCardsSection({ cinemas, loading, activeSlides, shi
 
   return (
     <section className="mt-8 grid gap-6 lg:grid-cols-2">
-      {cinemas.map((cinema) => {
+      {cinemasList.map((cinema) => {
         const images = cinema.image_urls ?? [];
         const currentSlide = activeSlides[cinema.id] ?? 0;
         const currentImage = images[currentSlide];
@@ -85,7 +96,9 @@ export default function CinemaCardsSection({ cinemas, loading, activeSlides, shi
                       <span
                         key={dotIndex}
                         className={`h-1.5 rounded-full transition-all ${
-                          dotIndex === currentSlide ? "w-5 bg-cyan-200" : "w-1.5 bg-white/55"
+                          dotIndex === currentSlide
+                            ? "w-5 bg-cyan-200"
+                            : "w-1.5 bg-white/55"
                         }`}
                       />
                     ))}
@@ -106,13 +119,17 @@ export default function CinemaCardsSection({ cinemas, loading, activeSlides, shi
               <div className="flex flex-col justify-between">
                 <div>
                   <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <h2 className="text-2xl font-semibold text-white/95">{cinema.name}</h2>
+                    <h2 className="text-2xl font-semibold text-white/95">
+                      {cinema.name}
+                    </h2>
                     <span className="rounded-lg border border-cyan-300/35 bg-cyan-300/10 px-2 py-1 text-xs font-medium text-cyan-200">
                       {cinema.city}
                     </span>
                   </div>
 
-                  <p className="text-sm leading-relaxed text-white/70">{cinema.description}</p>
+                  <p className="text-sm leading-relaxed text-white/70">
+                    {cinema.description}
+                  </p>
                 </div>
 
                 <div className="mt-5 space-y-2 pr-3">
