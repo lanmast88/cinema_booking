@@ -36,8 +36,13 @@ export default function DataFilters({
         ))}
       </div>
 
-      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-        <label className="relative xl:col-span-2">
+      <p className="mt-2 text-xs text-white/45 max-w-2xl">
+        *Дата и фильтры работают, но список сеансов для ближайших дней одинаков — это
+        сделано, чтобы расписание всегда оставалось заполненным.
+      </p>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <label className="relative md:col-span-2">
           <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-white/45" />
           <input
             type="text"
@@ -56,6 +61,22 @@ export default function DataFilters({
             onChange={(event) => setSelectedDate(event.target.value)}
             className="w-full rounded-xl border border-white/12 bg-white/[0.03] py-2.5 pl-10 pr-3 text-sm text-white outline-none transition focus:border-cyan-300/50"
           />
+        </label>
+
+        <label className="relative">
+          <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
+          <select
+            value={cinemaFilter}
+            onChange={(event) => setCinemaFilter(event.target.value)}
+            className="w-full appearance-none rounded-xl border border-white/12 bg-white/[0.03] py-2.5 pl-3 pr-9 text-sm text-white outline-none transition focus:border-cyan-300/50"
+          >
+            <option value="all" className="bg-[#0b1020]">Кинотеатр: все</option>
+            {allCinemas.map((cinemaName) => (
+              <option key={cinemaName} value={cinemaName} className="bg-[#0b1020]">
+                {cinemaName}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="relative">
@@ -86,25 +107,9 @@ export default function DataFilters({
             <option value="night" className="bg-[#0b1020]">Ночь (после 23:00)</option>
           </select>
         </label>
-
-        <label className="relative">
-          <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-white/45" />
-          <select
-            value={cinemaFilter}
-            onChange={(event) => setCinemaFilter(event.target.value)}
-            className="w-full max-w-xs appearance-none rounded-xl border border-white/12 bg-white/[0.03] py-2.5 pl-3 pr-9 text-sm text-white outline-none transition focus:border-cyan-300/50"
-          >
-            <option value="all" className="bg-[#0b1020]">Кинотеатр: все</option>
-            {allCinemas.map((cinemaName) => (
-              <option key={cinemaName} value={cinemaName} className="bg-[#0b1020]">
-                {cinemaName}
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
 
-      {adm && (
+      {adm && openAddMovie && (
         <button
           type="button"
           onClick={openAddMovie}
