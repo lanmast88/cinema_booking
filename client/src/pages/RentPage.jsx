@@ -3,10 +3,10 @@ import {
   BriefcaseIcon,
   CakeIcon,
   ChatBubbleLeftRightIcon,
+  ChevronDownIcon,
   CheckBadgeIcon,
   HeartIcon,
   PlayIcon,
-  QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -136,7 +136,7 @@ const faqItems = [
 ];
 
 export default function RentPage() {
-  const [openedFaq, setOpenedFaq] = useState(null);
+  const [openedFaq, setOpenedFaq] = useState("faq-3");
   const [activePhotoId, setActivePhotoId] = useState(photos[0].id);
   const activePhoto =
     photos.find((photo) => photo.id === activePhotoId) ?? photos[0];
@@ -250,7 +250,7 @@ export default function RentPage() {
                       <span className="text-sm font-medium text-white/90">
                         {item.q}
                       </span>
-                      <QuestionMarkCircleIcon className="h-4 w-4 text-cyan-200" />
+                      <ChevronDownIcon className="h-4 w-4 text-cyan-200" />
                     </button>
                     {opened && (
                       <p className="px-3 pb-3 text-sm text-white/70">
@@ -368,13 +368,6 @@ export default function RentPage() {
                 >
                   <CheckBadgeIcon className="h-4 w-4" />
                   Рассчитать стоимость
-                </button>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/45 bg-gradient-to-r from-emerald-500/90 to-teal-500/90 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(16,185,129,0.35)] transition hover:from-emerald-400 hover:to-teal-400"
-                >
-                  <ChatBubbleLeftRightIcon className="h-4 w-4" />
-                  WhatsApp менеджера
                 </button>
               </div>
             </div>

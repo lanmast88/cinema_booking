@@ -69,6 +69,10 @@ export default function PaymentPage() {
   };
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, []);
+
+  useEffect(() => {
     if (paymentStatus !== "success") return;
 
     const timer = setTimeout(() => {

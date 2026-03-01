@@ -95,6 +95,7 @@ export default function MainPage() {
   const [cinemaFilter, setCinemaFilter] = useState("all");
   const [selectedSession, setSelectedSession] = useState(null);
   const [chosenSeats, setChosenSeats] = useState([]);
+  const [isCheckoutPending, setIsCheckoutPending] = useState(false);
   const [moviesData, setMoviesData] = useState([]);
   const [adminSession, setAdminSession] = useState(null);
   const [adminForm, setAdminForm] = useState(emptyAdminForm);
@@ -229,7 +230,8 @@ export default function MainPage() {
   };
 
   const handleCheckout = (seats) => {
-    if (!selectedSession || seats.length === 0) return;
+    if (!selectedSession || seats.length === 0 || isCheckoutPending) return;
+    setIsCheckoutPending(true);
 
     const seatsForPayment = seats.map(([row, seat]) => [row, seat]);
     const sessionPrice = Number(selectedSession.session?.price) || 0;
@@ -462,6 +464,7 @@ export default function MainPage() {
         chosenSeats={chosenSeats}
         plusChosenSeat={plusChosenSeat}
         removeChosenSeat={removeChosenSeat}
+        isBuying={isCheckoutPending}
         onBuy={handleCheckout}
       />
       <AdminSessionModal
