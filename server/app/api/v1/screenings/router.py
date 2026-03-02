@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
@@ -12,6 +12,13 @@ from app.models.models import Hall, Movie, Screening, Ticket, User
 from app.schemas.screening import ScreeningCreate, ScreeningOut, ScreeningUpdate
 
 router = APIRouter(prefix="/screenings", tags=["Screenings"])
+
+
+def _normalize_dt_for_db(value: datetime) -> datetime:
+    """Приводит datetime к naive UTC для TIMESTAMP WITHOUT TIME ZONE."""
+    if value.tzinfo is None:
+        return value
+    return value.astimezone(timezone.utc).replace(tzinfo=None)
 
 
 async def _check_hall_overlap(
@@ -154,17 +161,23 @@ async def update_screening(
     if screening is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сеанс не найден.")
 
+    normalized_start_time: datetime | None = None
     if screening_data.start_time is not None:
+        normalized_start_time = _normalize_dt_for_db(screening_data.start_time)
         movie = await db.get(Movie, screening.movie_id)
         await _check_hall_overlap(
             db,
             hall_id=screening.hall_id,
-            start_time=screening_data.start_time,
+            start_time=normalized_start_time,
             duration_min=movie.duration_min,
             exclude_id=screening_id,
         )
 
-    for field, value in screening_data.model_dump(exclude_unset=True).items():
+    payload = screening_data.model_dump(exclude_unset=True)
+    if normalized_start_time is not None:
+        payload["start_time"] = normalized_start_time
+
+    for field, value in payload.items():
         setattr(screening, field, value)
 
     await db.commit()
@@ -210,17 +223,19 @@ async def create_screening(
     if hall is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Зал не найден.")
 
+    normalized_start_time = _normalize_dt_for_db(screening_data.start_time)
+
     await _check_hall_overlap(
         db,
         hall_id=screening_data.hall_id,
-        start_time=screening_data.start_time,
+        start_time=normalized_start_time,
         duration_min=movie.duration_min,
     )
 
     screening = Screening(
         movie_id=screening_data.movie_id,
         hall_id=screening_data.hall_id,
-        start_time=screening_data.start_time,
+        start_time=normalized_start_time,
         price=screening_data.price,
     )
     db.add(screening)
