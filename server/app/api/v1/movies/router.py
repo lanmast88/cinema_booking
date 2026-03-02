@@ -55,6 +55,7 @@ async def create_movie(
         name=movie_data.name,
         description=movie_data.description,
         duration_min=movie_data.duration_min,
+        poster_url=movie_data.poster_url,
     )
     db.add(movie)
     await db.commit()
