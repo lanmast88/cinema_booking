@@ -4,7 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../components/useAuth";
 import { getCinemas, getCinemaHalls } from "../api/cinemas";
-import { getMovies } from "../api/movies";
+import { getMovies, addMovie } from "../api/movies";
 import SeatPickerModal from "../features/main/components/SeatPickerModal";
 import AdminSessionModal from "../features/main/components/AdminSessionModal";
 import DeleteMovieDialog from "../features/main/components/DeleteMovieDialog";
@@ -23,6 +23,7 @@ import {
   getHour,
   toDateKey,
 } from "../features/main/utils/date";
+import { addScreening } from "../api/sсreenings";
 
 function mergePurchasedSeatsIntoMovies(movies, payload) {
   if (
@@ -99,6 +100,8 @@ export default function MainPage() {
   const [moviesData, setMoviesData] = useState([]);
   const [adminSession, setAdminSession] = useState(null);
   const [adminForm, setAdminForm] = useState(emptyAdminForm);
+  const [adminFormError, setAdminFormError] = useState("");
+  const [adminCreateMode, setAdminCreateMode] = useState("movie");
   const [cinemas, setCinemas] = useState([]);
   const [cinemasLoading, setCinemasLoading] = useState(true);
 
@@ -353,6 +356,12 @@ export default function MainPage() {
       ...session,
     });
     setAdminForm({
+      targetMovieId: movie.id ?? "",
+      title: movie.title ?? "",
+      genre: movie.genre ?? "",
+      duration: movie.duration ?? "",
+      rating: movie.rating ?? "",
+      poster: movie.poster ?? "",
       dayOffset: String(session.dayOffset ?? 0),
       time: session.time ?? "",
       price: String(session.price ?? ""),
@@ -360,6 +369,7 @@ export default function MainPage() {
       hall: session.hall ?? "",
       cinema: session.cinema ?? "",
     });
+    setAdminFormError("");
     setIsAdminPanelOpen(true);
   };
 
@@ -367,10 +377,216 @@ export default function MainPage() {
     setIsAdminPanelOpen(false);
     setAdminSession(null);
     setAdminForm(emptyAdminForm);
+    setAdminFormError("");
+    setAdminCreateMode("movie");
   };
 
-  const saveAdminSession = () => {
-    if (!adminSession) return;
+  const saveAdminSession = async () => {
+    if (!adminSession) {
+      if (adminCreateMode === "session") {
+        const targetMovieId = String(adminForm.targetMovieId ?? "").trim();
+        const parsedPrice = Number(adminForm.price);
+        const requiredSessionFields = [
+          targetMovieId,
+          adminForm.time,
+          adminForm.price,
+          adminForm.format,
+          adminForm.hall,
+          adminForm.cinema,
+        ];
+        const hasEmptySessionFields = requiredSessionFields.some(
+          (value) => !String(value ?? "").trim(),
+        );
+        if (hasEmptySessionFields) {
+          setAdminFormError("Заполните все поля для нового сеанса.");
+          return;
+        }
+        if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+          setAdminFormError("Цена должна быть корректным числом.");
+          return;
+        }
+
+        const parsedMovieId = Number(targetMovieId);
+        if (!Number.isFinite(parsedMovieId) || parsedMovieId <= 0) {
+          setAdminFormError(
+            "У выбранного фильма нет серверного ID. Перезагрузите список фильмов.",
+          );
+          return;
+        }
+
+        const parsedHallId = Number(adminForm.hall);
+        if (!Number.isFinite(parsedHallId) || parsedHallId <= 0) {
+          setAdminFormError("Для сохранения на сервере укажите числовой ID зала.");
+          return;
+        }
+
+        const [hours, minutes] = String(adminForm.time).split(":").map(Number);
+        const startDate = getDateByOffset(Number(adminForm.dayOffset));
+        startDate.setHours(hours || 0, minutes || 0, 0, 0);
+        // Отправляем локальное naive-время (без timezone), т.к. БД хранит TIMESTAMP WITHOUT TIME ZONE.
+        const yyyy = startDate.getFullYear();
+        const mm = String(startDate.getMonth() + 1).padStart(2, "0");
+        const dd = String(startDate.getDate()).padStart(2, "0");
+        const hh = String(startDate.getHours()).padStart(2, "0");
+        const min = String(startDate.getMinutes()).padStart(2, "0");
+        const startTimeIso = `${yyyy}-${mm}-${dd}T${hh}:${min}:00`;
+
+        const optimisticSession = {
+          dayOffset: Number(adminForm.dayOffset),
+          time: adminForm.time.trim(),
+          price: parsedPrice,
+          format: adminForm.format.trim(),
+          hall: adminForm.hall.trim(),
+          cinema: adminForm.cinema.trim(),
+          purchasedSeats: [],
+        };
+
+        setMoviesData((prev) =>
+          prev.map((movie) => {
+            if (movie.id !== targetMovieId) return movie;
+            return {
+              ...movie,
+              screenings: [...movie.screenings, optimisticSession],
+            };
+          }),
+        );
+        try {
+          await addScreening(
+            parsedMovieId,
+            parsedHallId,
+            startTimeIso,
+            parsedPrice,
+            adminForm.format.trim(),
+          );
+
+          closeAdminPanel();
+        } catch (error) {
+          setMoviesData((prev) =>
+            prev.map((movie) => {
+              if (movie.id !== targetMovieId) return movie;
+              if (movie.screenings.length === 0) return movie;
+              return {
+                ...movie,
+                screenings: movie.screenings.slice(0, -1),
+              };
+            }),
+          );
+          const serverMessage =
+            error?.response?.data?.detail &&
+            typeof error.response.data.detail === "string"
+              ? error.response.data.detail
+              : null;
+          setAdminFormError(
+            serverMessage || "Не удалось сохранить сеанс на сервере.",
+          );
+        }
+        return;
+      }
+
+      const parsedPrice = Number(adminForm.price);
+      const requiredFields = [
+        adminForm.title,
+        adminForm.genre,
+        adminForm.duration,
+        adminForm.rating,
+        adminForm.poster,
+        adminForm.time,
+        adminForm.price,
+        adminForm.format,
+        adminForm.hall,
+        adminForm.cinema,
+      ];
+
+      const hasEmptyRequired = requiredFields.some(
+        (value) => !String(value ?? "").trim(),
+      );
+
+      if (hasEmptyRequired) {
+        setAdminFormError("Заполните все поля фильма и сеанса.");
+        return;
+      }
+
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        setAdminFormError("Цена должна быть корректным числом.");
+        return;
+      }
+
+      const parseDurationToMinutes = (value) => {
+        const raw = String(value ?? "")
+          .trim()
+          .toLowerCase();
+        if (!raw) return NaN;
+
+        // Поддержка форматов: "120", "2ч", "2ч 15м", "135м"
+        const directNumber = Number(raw);
+        if (Number.isFinite(directNumber) && directNumber > 0) {
+          return directNumber;
+        }
+
+        const hoursMatch = raw.match(/(\d+)\s*ч/);
+        const minutesMatch = raw.match(/(\d+)\s*м/);
+        const hours = hoursMatch ? Number(hoursMatch[1]) : 0;
+        const minutes = minutesMatch ? Number(minutesMatch[1]) : 0;
+        const total = hours * 60 + minutes;
+        return total > 0 ? total : NaN;
+      };
+
+      const durationMinutes = parseDurationToMinutes(adminForm.duration);
+      if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
+        setAdminFormError(
+          "Длительность должна быть числом минут или форматом типа 2ч 15м.",
+        );
+        return;
+      }
+
+      const parsedAgeRating = Number.parseInt(
+        String(adminForm.rating ?? "").replace(/\D/g, ""),
+        10,
+      );
+      const ageRatingForApi = Number.isFinite(parsedAgeRating)
+        ? parsedAgeRating
+        : undefined;
+
+      const tempMovieId = `movie-temp-${Date.now()}`;
+      const newMovie = {
+        id: tempMovieId,
+        title: adminForm.title.trim(),
+        genre: adminForm.genre.trim(),
+        duration: adminForm.duration.trim(),
+        rating: adminForm.rating.trim(),
+        poster: adminForm.poster.trim(),
+        screenings: [
+          {
+            dayOffset: Number(adminForm.dayOffset),
+            time: adminForm.time.trim(),
+            price: parsedPrice,
+            format: adminForm.format.trim(),
+            hall: adminForm.hall.trim(),
+            cinema: adminForm.cinema.trim(),
+            purchasedSeats: [],
+          },
+        ],
+      };
+
+      setMoviesData((prev) => [newMovie, ...prev]);
+
+      try {
+        await addMovie(
+          adminForm.title.trim(),
+          adminForm.genre.trim(),
+          durationMinutes,
+          adminForm.poster.trim(),
+          ageRatingForApi,
+        );
+        closeAdminPanel();
+      } catch {
+        setMoviesData((prev) =>
+          prev.filter((movie) => movie.id !== tempMovieId),
+        );
+        setAdminFormError("Не удалось сохранить фильм на сервере.");
+      }
+      return;
+    }
 
     setMoviesData((prev) =>
       prev.map((movie) => {
@@ -440,10 +656,16 @@ export default function MainPage() {
             allCinemas={allCinemas}
             dayTabs={dayTabs}
             adm={adm}
-            setAdminSession={setAdminSession}
-            setAdminForm={setAdminForm}
-            emptyAdminForm={emptyAdminForm}
-            setIsAdminPanelOpen={setIsAdminPanelOpen}
+            openAddMovie={() => {
+              setAdminSession(null);
+              setAdminForm({
+                ...emptyAdminForm,
+                targetMovieId: moviesData[0]?.id ?? "",
+              });
+              setAdminFormError("");
+              setAdminCreateMode("movie");
+              setIsAdminPanelOpen(true);
+            }}
           />
 
           <MovieScheduleSection
@@ -473,6 +695,10 @@ export default function MainPage() {
         adminSession={adminSession}
         adminForm={adminForm}
         setAdminForm={setAdminForm}
+        adminFormError={adminFormError}
+        adminCreateMode={adminCreateMode}
+        setAdminCreateMode={setAdminCreateMode}
+        movies={moviesData}
         saveAdminSession={saveAdminSession}
       />
       <DeleteMovieDialog

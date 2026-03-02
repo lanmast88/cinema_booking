@@ -195,6 +195,12 @@ export const seatsData = Array.from({ length: rows }, (_, r) =>
 );
 
 export const emptyAdminForm = {
+  targetMovieId: "",
+  title: "",
+  genre: "",
+  duration: "",
+  rating: "",
+  poster: "",
   dayOffset: "0",
   time: "",
   price: "",

@@ -78,6 +78,19 @@ const broadcasts = [
     ],
   },
   {
+    sport: "Баскетбол",
+    accent: "from-orange-500/25 to-amber-500/10 border-orange-300/30",
+    sticker: "Game Night",
+    stickerTone:
+      "from-orange-500/90 via-amber-500/90 to-red-500/90 border-amber-200/50 shadow-[0_10px_22px_rgba(249,115,22,0.35)]",
+
+    matches: [
+      "Евролига: ЦСКА — Реал Мадрид · 20:00",
+      "Единая лига ВТБ: Зенит — УНИКС · 19:30",
+      "NBA: Lakers — Celtics · 03:30",
+    ],
+  },
+  {
     sport: "Другое",
     accent: "from-emerald-500/25 to-teal-500/10 border-emerald-300/30",
     sticker: "Выходные",
@@ -190,7 +203,8 @@ export default function SportPage() {
   const [rentRequestEmail, setRentRequestEmail] = useState("");
   const [rentRequestError, setRentRequestError] = useState("");
   const [rentRequestStatus, setRentRequestStatus] = useState("idle");
-  const [isLoggedInRequestSuccess, setIsLoggedInRequestSuccess] = useState(false);
+  const [isLoggedInRequestSuccess, setIsLoggedInRequestSuccess] =
+    useState(false);
   const [bookingForm, setBookingForm] = useState({
     date: "",
     guests: "",
@@ -240,10 +254,10 @@ export default function SportPage() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#06070d] text-white">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(239,68,68,0.22),transparent_35%),radial-gradient(circle_at_85%_10%,rgba(249,115,22,0.18),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(217,70,239,0.14),transparent_45%)]" />
-      <div className="pointer-events-none absolute left-0 top-10 h-72 w-72 rounded-full bg-red-500/20 blur-3xl" />
-      <div className="pointer-events-none absolute right-0 top-40 h-80 w-80 rounded-full bg-orange-500/15 blur-3xl" />
+    <div className="relative min-h-screen overflow-hidden bg-[#070911] text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(74,58,255,0.28),transparent_40%),radial-gradient(circle_at_80%_0%,rgba(0,188,255,0.22),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(169,0,255,0.16),transparent_45%)]" />
+      <div className="pointer-events-none absolute -left-20 top-32 h-72 w-72 rounded-full bg-[#5f3bff]/25 blur-3xl animate-pulse-glow" />
+      <div className="pointer-events-none absolute right-0 top-14 h-80 w-80 rounded-full bg-[#00b7ff]/20 blur-3xl animate-pulse-glow-delayed" />
 
       <Header />
 
@@ -475,9 +489,13 @@ export default function SportPage() {
             <input
               value={bookingForm.date}
               onChange={(event) => {
-                setBookingForm((prev) => ({ ...prev, date: event.target.value }));
+                setBookingForm((prev) => ({
+                  ...prev,
+                  date: event.target.value,
+                }));
                 if (bookingFormError) setBookingFormError("");
-                if (isLoggedInRequestSuccess) setIsLoggedInRequestSuccess(false);
+                if (isLoggedInRequestSuccess)
+                  setIsLoggedInRequestSuccess(false);
               }}
               placeholder="Дата матча"
               className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-red-300/50"
@@ -490,7 +508,8 @@ export default function SportPage() {
                   guests: event.target.value,
                 }));
                 if (bookingFormError) setBookingFormError("");
-                if (isLoggedInRequestSuccess) setIsLoggedInRequestSuccess(false);
+                if (isLoggedInRequestSuccess)
+                  setIsLoggedInRequestSuccess(false);
               }}
               placeholder="Количество гостей"
               className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-red-300/50"
@@ -498,9 +517,13 @@ export default function SportPage() {
             <input
               value={bookingForm.event}
               onChange={(event) => {
-                setBookingForm((prev) => ({ ...prev, event: event.target.value }));
+                setBookingForm((prev) => ({
+                  ...prev,
+                  event: event.target.value,
+                }));
                 if (bookingFormError) setBookingFormError("");
-                if (isLoggedInRequestSuccess) setIsLoggedInRequestSuccess(false);
+                if (isLoggedInRequestSuccess)
+                  setIsLoggedInRequestSuccess(false);
               }}
               placeholder="Команда / событие"
               className="rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-red-300/50"
@@ -612,7 +635,10 @@ export default function SportPage() {
         open={isRentRequestModalOpen}
         onClose={closeRentRequestModal}
       >
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+          aria-hidden="true"
+        />
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <DialogPanel className="glass-card w-full max-w-md rounded-3xl border border-white/15 p-5 sm:p-6">
             {rentRequestStatus === "success" ? (
@@ -644,7 +670,8 @@ export default function SportPage() {
                   Почта для связи
                 </h3>
                 <p className="mt-2 text-sm text-white/70">
-                  Вы не авторизованы. Укажите email для обратной связи по аренде.
+                  Вы не авторизованы. Укажите email для обратной связи по
+                  аренде.
                 </p>
 
                 <div className="mt-4 rounded-xl border border-white/12 bg-white/[0.03] p-3">
@@ -662,7 +689,9 @@ export default function SportPage() {
                     />
                   </div>
                   {rentRequestError && (
-                    <p className="mt-2 text-xs text-rose-300">{rentRequestError}</p>
+                    <p className="mt-2 text-xs text-rose-300">
+                      {rentRequestError}
+                    </p>
                   )}
                 </div>
 

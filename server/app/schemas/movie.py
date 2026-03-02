@@ -8,6 +8,7 @@ class MovieBase(OrmBase):
     description: Optional[str] = None
     duration_min: int
     poster_url: Optional[str] = None
+    age_rating: Optional[int] = None
 
 
 class MovieCreate(MovieBase):
@@ -19,6 +20,7 @@ class MovieUpdate(OrmBase):
     description: Optional[str] = None
     duration_min: Optional[int] = None
     poster_url: Optional[str] = None
+    age_rating: Optional[int] = None
 
 
 class MovieOut(MovieBase):
@@ -26,4 +28,3 @@ class MovieOut(MovieBase):
 
 
 __all__ = ["MovieBase", "MovieCreate", "MovieUpdate", "MovieOut"]
-
