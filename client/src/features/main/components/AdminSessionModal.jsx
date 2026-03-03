@@ -281,17 +281,27 @@ export default function AdminSessionModal({
           )}
 
           {adminSession && (
-            <div className="mb-4 space-y-3">
+            <div className="mb-4">
+              <p className="mb-2 text-sm font-semibold text-white/80">
+                Купленные места
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2">
               {adminSession?.purchasedSeats?.map((seat, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between rounded-xl bg-white/[0.03] px-3 py-2"
+                  className="rounded-xl border border-cyan-300/30 bg-gradient-to-r from-cyan-400/10 to-blue-500/10 px-3 py-2 shadow-[0_8px_18px_rgba(56,189,248,0.2)]"
                 >
-                  <span className="rounded-2xl p-4">
-                    Ряд {seat[0]}, место {seat[1]}
-                  </span>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-semibold text-cyan-100">
+                      Ряд {seat[0]} · Место {seat[1]}
+                    </span>
+                    <span className="rounded-full border border-emerald-300/40 bg-emerald-400/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-200">
+                      Оплачено
+                    </span>
+                  </div>
                 </div>
               ))}
+              </div>
             </div>
           )}
 

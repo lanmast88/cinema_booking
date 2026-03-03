@@ -3,72 +3,85 @@ import { Dialog, DialogPanel } from "@headlessui/react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../components/useAuth";
+import InfoCard from "../components/InfoCard";
 
-const promotions = [
+const defaultPromotions = [
   {
     id: "promo-1",
-    title: "Вдвое больше — вдвое дешевле!",
-    subtitle: "С 1 марта по 30 апреля",
-    description: "При покупке 2 и более билетов — попкорн со скидкой 50%",
+    title: "Вдвое больше, вдвое дешевле",
+    subtitle: "1 марта - 30 апреля",
+    description: "При покупке от двух билетов попкорн со скидкой 50%.",
     details:
-      "Акция действует при покупке двух и более билетов на один сеанс. Скидка распространяется на все виды попкорна в нашем ассортименте.",
+      "Скидка действует на любой вид попкорна в день сеанса. Применяется только при покупке двух и более билетов одним заказом.",
+    badge: "ХИТ",
+    badgeClassName:
+      "border-cyan-300/40 bg-cyan-300/12 text-cyan-100 shadow-[0_8px_18px_rgba(34,211,238,0.25)]",
   },
   {
     id: "promo-2",
-    title: "Третий — НЕ лишний!",
+    title: "Три билета по цене двух",
     subtitle: "Каждое воскресенье",
-    description:
-      "Три места по цене двух — отличная возможность провести выходной с семьёй.",
-    details: "Акция действует при покупке трёх и более билетов в один сеанс.",
+    description: "Собирай друзей и получай 1 билет бесплатно.",
+    details:
+      "Акция работает на стандартные 2D и Dolby сеансы. Не суммируется с другими скидками.",
+    badge: "WEEKEND",
+    badgeClassName:
+      "border-fuchsia-300/45 bg-fuchsia-300/12 text-fuchsia-100 shadow-[0_8px_18px_rgba(217,70,239,0.25)]",
   },
   {
     id: "promo-3",
-    title: "Ночная премьера: попкорн в подарок",
-    subtitle: "Премьеры и специальные показы",
-    description:
-      "Посетите ночную премьеру и получите бесплатный маленький попкорн на кассе.",
+    title: "Ночная премьера + подарок",
+    subtitle: "Сеансы после 22:00",
+    description: "На ночных премьерах выдаем маленький попкорн бесплатно.",
     details:
-      "Акция действует при предъявлении электронного билета на показ после 22:00. ",
+      "Достаточно показать электронный билет на кассе бара в день показа. Количество подарков ограничено.",
+    badge: "NIGHT",
+    badgeClassName:
+      "border-indigo-300/45 bg-indigo-300/12 text-indigo-100 shadow-[0_8px_18px_rgba(99,102,241,0.25)]",
   },
   {
     id: "promo-4",
     title: "Счастливые часы",
-    subtitle: "В будние дни с 12:00 до 16:00",
-    description:
-      "Посетите сеанс в счастливые часы и получите скидку 30% на билет.",
+    subtitle: "Будни 12:00 - 16:00",
+    description: "Скидка 30% на дневные сеансы.",
     details:
-      "Акция действует при покупке билетов в будние дни с 12:00 до 16:00. Скидка распространяется на все виды билетов.",
+      "Акция действует на билеты, купленные и онлайн, и в кассе. Не распространяется на спецпоказы.",
+    badge: "DAYTIME",
+    badgeClassName:
+      "border-emerald-300/45 bg-emerald-300/12 text-emerald-100 shadow-[0_8px_18px_rgba(16,185,129,0.25)]",
   },
 ];
 
-const emptyForm = { title: "", subtitle: "", description: "", details: "" };
+const emptyForm = {
+  title: "",
+  subtitle: "",
+  description: "",
+  details: "",
+  badge: "",
+};
 
 export default function PromotionPage() {
   const { adm } = useAuth();
   const [selectedPromo, setSelectedPromo] = useState(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [promoList, setPromoList] = useState(promotions);
-  const [promoToDelete, setPromoToDelete] = useState(null);
+  const [promoList, setPromoList] = useState(defaultPromotions);
   const [form, setForm] = useState(emptyForm);
-  
-  const openAdd = () => {
-    setForm(emptyForm);
-    setIsAddOpen(true);
-  };
 
   const saveNewPromo = () => {
     const next = {
       id: `promo-${Date.now()}`,
-      title: form.title || "Без названия",
-      subtitle: form.subtitle || "",
-      description: form.description || "",
-      details: form.details || "",
+      title: form.title.trim() || "Без названия",
+      subtitle: form.subtitle.trim(),
+      description: form.description.trim(),
+      details: form.details.trim(),
+      badge: form.badge.trim() || "NEW",
+      badgeClassName:
+        "border-pink-300/45 bg-pink-300/12 text-pink-100 shadow-[0_8px_18px_rgba(236,72,153,0.25)]",
     };
-    setPromoList((p) => [next, ...p]);
+    setPromoList((prev) => [next, ...prev]);
+    setForm(emptyForm);
     setIsAddOpen(false);
   };
-
-  const deletePromo = (id) => setPromoList((p) => p.filter((x) => x.id !== id));
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#070911] text-white">
@@ -79,69 +92,64 @@ export default function PromotionPage() {
       <Header />
 
       <main className="relative z-20 mx-auto max-w-7xl px-6 pb-20 pt-28 lg:px-10">
-        <h1 className="mt-6 text-3xl font-semibold tracking-tight sm:text-4xl">
-          Акции и предложения
-        </h1>
+        <section className="rounded-3xl border border-cyan-300/20 bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-fuchsia-500/10 p-6 sm:p-8">
+          <p className="inline-flex rounded-full border border-cyan-300/35 bg-cyan-300/10 px-3 py-1 text-xs font-semibold tracking-wide text-cyan-100">
+            OFFERS
+          </p>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+            Акции и спецпредложения
+          </h1>
+          <p className="mt-3 max-w-3xl text-sm text-white/75 sm:text-base">
+            Подобрали лучшие предложения для билетов, бара и групповых походов в
+            кино. Выбирай, что выгодно именно тебе.
+          </p>
+        </section>
 
-        <p className="mt-3 text-white/70">
-          Здесь собрано всё, что поможет сэкономить и сделать ваш поход в кино
-          ещё приятнее.
-        </p>
-
-        <div className="mt-8 grid gap-6 ">
+        <section className="mt-8 grid gap-4 lg:grid-cols-2">
           {promoList.map((promo) => (
-            <article
+            <InfoCard
               key={promo.id}
-              className="glass-card overflow-hidden rounded-3xl p-5"
+              title={promo.title}
+              subtitle={promo.subtitle}
+              description={promo.description}
+              badge={promo.badge}
+              badgeClassName={promo.badgeClassName}
+              actionLabel="Подробнее"
+              onAction={() => setSelectedPromo(promo)}
             >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-semibold text-white/95">
-                    {promo.title}
-                  </h2>
-                  <div className="mt-1 text-sm text-white/70">
-                    {promo.subtitle}
-                  </div>
-                  <p className="mt-3 text-sm text-white/75">
-                    {promo.description}
-                  </p>
-                </div>
-
-                <div className="flex flex-col items-end gap-2">
+              {adm ? (
+                <div className="mt-3">
                   <button
                     type="button"
-                    onClick={() => setSelectedPromo(promo)}
-                    className="rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-3 py-2 text-sm font-semibold text-cyan-100 transition hover:border-cyan-200/60 hover:bg-cyan-300/20"
+                    onClick={() =>
+                      setPromoList((prev) => prev.filter((x) => x.id !== promo.id))
+                    }
+                    className="rounded-xl border border-rose-300/45 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/20"
                   >
-                    Подробнее
+                    Удалить
                   </button>
-                  {adm && (
-                    <button
-                      type="button"
-                      onClick={() => deletePromo(promo.id)}
-                      className="mt-2 rounded-xl border border-rose-300/50 bg-rose-500/10 px-3 py-1 text-sm font-semibold text-rose-300 transition hover:bg-rose-500/20"
-                    >
-                      Удалить
-                    </button>
-                  )}
                 </div>
-              </div>
-            </article>
+              ) : null}
+            </InfoCard>
           ))}
-        </div>
+        </section>
 
-        {adm && (
+        {adm ? (
           <div className="mt-6 flex justify-end">
             <button
               type="button"
-              onClick={openAdd}
-              className="inline-flex whitespace-normal rounded-xl border border-pink-300/50 bg-gradient-to-r from-pink-500/80 to-fuchsia-500/80 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(236,72,153,0.35)] transition hover:from-pink-400/90 hover:to-fuchsia-400/90"
+              onClick={() => {
+                setForm(emptyForm);
+                setIsAddOpen(true);
+              }}
+              className="inline-flex rounded-xl border border-pink-300/50 bg-gradient-to-r from-pink-500/80 to-fuchsia-500/80 px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(236,72,153,0.35)] transition hover:from-pink-400/90 hover:to-fuchsia-400/90"
             >
               Добавить акцию
             </button>
           </div>
-        )}
+        ) : null}
       </main>
+
       <Footer />
 
       <Dialog
@@ -149,65 +157,45 @@ export default function PromotionPage() {
         onClose={() => setSelectedPromo(null)}
         className="relative z-50"
       >
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm"
-          aria-hidden="true"
-        />
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <DialogPanel className="glass-card w-full max-w-lg rounded-3xl p-6">
-            <h3 className="text-2xl font-semibold text-white">
-              {selectedPromo?.title}
-            </h3>
-            <p className="mt-2 text-sm text-white/70">
-              {selectedPromo?.subtitle}
-            </p>
-            <div className="mt-4 text-sm text-white/75">
+          <DialogPanel className="glass-card w-full max-w-xl rounded-3xl p-6">
+            <h3 className="text-2xl font-semibold text-white">{selectedPromo?.title}</h3>
+            <p className="mt-2 text-sm text-cyan-200">{selectedPromo?.subtitle}</p>
+            <p className="mt-4 text-sm leading-relaxed text-white/80">
               {selectedPromo?.details}
-            </div>
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setSelectedPromo(null)}
-                className="w-full rounded-xl border border-white/15 bg-white/5 py-2 font-semibold text-white hover:bg-pink-400 transition"
-              >
-                Закрыть
-              </button>
-            </div>
+            </p>
+            <button
+              type="button"
+              onClick={() => setSelectedPromo(null)}
+              className="mt-6 w-full rounded-xl border border-white/15 bg-white/[0.03] py-2.5 font-semibold text-white/90 transition hover:border-cyan-300/40 hover:text-cyan-200"
+            >
+              Закрыть
+            </button>
           </DialogPanel>
         </div>
       </Dialog>
 
-      <Dialog
-        open={isAddOpen}
-        onClose={() => setIsAddOpen(false)}
-        className="relative z-50"
-      >
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm"
-          aria-hidden="true"
-        />
+      <Dialog open={isAddOpen} onClose={() => setIsAddOpen(false)} className="relative z-50">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <DialogPanel className="glass-card w-full max-w-2xl rounded-3xl p-6">
-            <h3 className="text-xl font-semibold text-white">Добавить акцию</h3>
+            <h3 className="text-xl font-semibold text-white">Новая акция</h3>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="text-sm text-white/80">
                 Название
                 <input
                   value={form.title}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, title: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none"
+                  onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/50"
                 />
               </label>
               <label className="text-sm text-white/80">
-                Детали
+                Период
                 <input
                   value={form.subtitle}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, subtitle: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none"
+                  onChange={(e) => setForm((p) => ({ ...p, subtitle: e.target.value }))}
+                  className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/50"
                 />
               </label>
               <label className="text-sm text-white/80">
@@ -217,17 +205,25 @@ export default function PromotionPage() {
                   onChange={(e) =>
                     setForm((p) => ({ ...p, description: e.target.value }))
                   }
-                  className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none"
+                  className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/50"
                 />
               </label>
               <label className="text-sm text-white/80">
-                Подробное описание
+                Стикер
                 <input
+                  value={form.badge}
+                  onChange={(e) => setForm((p) => ({ ...p, badge: e.target.value }))}
+                  placeholder="HIT / NEW / NIGHT"
+                  className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/50"
+                />
+              </label>
+              <label className="text-sm text-white/80 sm:col-span-2">
+                Подробности
+                <textarea
                   value={form.details}
-                  onChange={(e) =>
-                    setForm((p) => ({ ...p, details: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none"
+                  onChange={(e) => setForm((p) => ({ ...p, details: e.target.value }))}
+                  rows={4}
+                  className="mt-1 w-full resize-none rounded-xl border border-white/12 bg-white/[0.03] px-3 py-2 text-sm text-white outline-none focus:border-cyan-300/50"
                 />
               </label>
             </div>
@@ -235,55 +231,16 @@ export default function PromotionPage() {
               <button
                 type="button"
                 onClick={saveNewPromo}
-                className="w-full rounded-xl bg-emerald-500 py-2 font-semibold text-white hover:bg-emerald-400 transition"
+                className="w-full rounded-xl bg-emerald-500 py-2 font-semibold text-white transition hover:bg-emerald-400"
               >
                 Сохранить
               </button>
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
-                className="w-full rounded-xl bg-pink-500 py-2 font-semibold text-white hover:bg-pink-400 transition"
+                className="w-full rounded-xl bg-pink-500 py-2 font-semibold text-white transition hover:bg-pink-400"
               >
                 Отмена
-              </button>
-            </div>
-          </DialogPanel>
-        </div>
-      </Dialog>
-
-      <Dialog
-        open={Boolean(promoToDelete)}
-        onClose={() => setPromoToDelete(null)}
-        className="relative z-50"
-      >
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <DialogPanel className="glass-card w-full max-w-sm rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white">Удалить акцию?</h3>
-            <p className="mt-3 text-sm text-white/65 leading-relaxed">
-              Вы уверены, что хотите удалить{" "}
-              <span className="font-semibold text-white/90">
-                «{promoToDelete?.title}»
-              </span>
-              ? Это действие необратимо.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setPromoToDelete(null)}
-                className="flex-1 rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-semibold text-white/80 transition hover:bg-white/10"
-              >
-                Отмена
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  deletePromo(promoToDelete.id);
-                  setPromoToDelete(null);
-                }}
-                className="flex-1 rounded-xl border border-rose-400/40 bg-gradient-to-r from-rose-500/90 to-red-500/85 py-2.5 text-sm font-semibold text-white transition hover:from-rose-400 hover:to-red-400"
-              >
-                Удалить
               </button>
             </div>
           </DialogPanel>

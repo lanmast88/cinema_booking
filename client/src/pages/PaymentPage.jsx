@@ -76,14 +76,16 @@ export default function PaymentPage() {
     if (paymentStatus !== "success") return;
 
     const timer = setTimeout(() => {
+      sessionStorage.setItem(
+        "paidSession",
+        JSON.stringify({
+          movieId,
+          session,
+          seats,
+        }),
+      );
       navigate("/", {
-        state: {
-          paidSession: {
-            movieId,
-            session,
-            seats,
-          },
-        },
+        replace: true,
       });
     }, 1200);
 

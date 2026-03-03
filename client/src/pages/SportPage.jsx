@@ -311,8 +311,8 @@ export default function SportPage() {
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_1fr] lg:items-start">
-          <div className="space-y-4 lg:space-y-3">
-            <div className="glass-card rounded-3xl p-5 sm:p-6 lg:-mt-2">
+          <div className="space-y-4 lg:space-y-4">
+            <div className="glass-card rounded-3xl p-5 sm:p-6">
               <h2 className="text-2xl font-semibold">Фишки для болельщиков</h2>
               <div className="mt-4 space-y-3">
                 {fanFeatures.map((item) => {
@@ -391,7 +391,7 @@ export default function SportPage() {
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 lg:space-y-4">
             <div className="glass-card rounded-3xl p-5 sm:p-6">
               <h2 className="text-2xl font-semibold">Спортивное меню</h2>
               <div className="mt-4 overflow-hidden rounded-2xl border border-white/12">
