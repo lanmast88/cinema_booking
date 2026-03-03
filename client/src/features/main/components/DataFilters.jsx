@@ -15,6 +15,7 @@ export default function DataFilters({
   allCinemas,
   adm,
   openAddMovie,
+  resetFilters,
 }) {
   return (
     <div className="glass-card mt-6 rounded-3xl p-4 pb-8 sm:p-5 sm:pb-10 relative">
@@ -40,6 +41,15 @@ export default function DataFilters({
         *Дата и фильтры работают, но список сеансов для ближайших дней одинаков — это
         сделано, чтобы расписание всегда оставалось заполненным.
       </p>
+      <div className="mt-3">
+        <button
+          type="button"
+          onClick={resetFilters}
+          className="rounded-xl border border-white/15 bg-white/[0.03] px-3 py-2 text-sm font-medium text-white/80 transition hover:border-cyan-300/40 hover:text-cyan-200"
+        >
+          Сбросить фильтры
+        </button>
+      </div>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <label className="relative md:col-span-2">

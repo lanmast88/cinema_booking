@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { useAuth } from "../components/useAuth";
-import { getCinemas, getCinemaHalls } from "../api/cinemas";
+import { getCinemas, getHallsByCinemaIds } from "../api/cinemas";
 import { getMovies, addMovie } from "../api/movies";
 import SeatPickerModal from "../features/main/components/SeatPickerModal";
 import AdminSessionModal from "../features/main/components/AdminSessionModal";
@@ -23,7 +23,18 @@ import {
   getHour,
   toDateKey,
 } from "../features/main/utils/date";
-import { addScreening } from "../api/sсreenings";
+import { addScreening } from "../api/screenings";
+
+function popPaidSessionFromStorage() {
+  const raw = sessionStorage.getItem("paidSession");
+  if (!raw) return null;
+  sessionStorage.removeItem("paidSession");
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 
 function mergePurchasedSeatsIntoMovies(movies, payload) {
   if (
@@ -75,7 +86,6 @@ function mergePurchasedSeatsIntoMovies(movies, payload) {
 export default function MainPage() {
   const [activeSlides, setActiveSlides] = useState({});
   const navigate = useNavigate();
-  const location = useLocation();
 
   const dayTabs = useMemo(() => {
     return Array.from({ length: 4 }, (_, offset) => {
@@ -120,26 +130,24 @@ export default function MainPage() {
         const cinemasData = cinemasRes.data ?? [];
         setCinemas(cinemasData);
 
-        // Загрузка залов для каждого кинотеатра, чтобы построить карту hall_id → {hallName, cinemaName}
-        const hallsResponses = await Promise.all(
-          cinemasData.map((cinema) =>
-            getCinemaHalls(cinema.id).then((res) => ({
-              cinema,
-              halls: res.data ?? [],
-            })),
-          ),
-        );
+        // Батч-загрузка залов по всем кинотеатрам (без N+1 запросов)
+        const cinemaIds = cinemasData.map((cinema) => cinema.id);
+        const hallsRes =
+          cinemaIds.length > 0
+            ? await getHallsByCinemaIds(cinemaIds)
+            : { data: [] };
 
         if (isCancelled) return;
 
         const hallInfoById = {};
-        hallsResponses.forEach(({ cinema, halls }) => {
-          halls.forEach((hall) => {
-            hallInfoById[hall.id] = {
-              hallName: hall.name,
-              cinemaName: cinema.name,
-            };
-          });
+        const cinemaNameById = Object.fromEntries(
+          cinemasData.map((cinema) => [cinema.id, cinema.name]),
+        );
+        (hallsRes.data ?? []).forEach((hall) => {
+          hallInfoById[hall.id] = {
+            hallName: hall.name,
+            cinemaName: cinemaNameById[hall.cinema_id] ?? "Cinema",
+          };
         });
 
         const allHallInfos = Object.values(hallInfoById);
@@ -199,7 +207,7 @@ export default function MainPage() {
 
         const mergedMovies = mergePurchasedSeatsIntoMovies(
           moviesFromApi,
-          location.state?.paidSession,
+          popPaidSessionFromStorage(),
         );
         setMoviesData(mergedMovies);
       } catch {
@@ -216,7 +224,7 @@ export default function MainPage() {
     return () => {
       isCancelled = true;
     };
-  }, [dayTabs, location.state?.paidSession]);
+  }, [dayTabs]);
 
   const plusChosenSeat = (row, seat) => {
     setChosenSeats((prev) => {
@@ -326,6 +334,14 @@ export default function MainPage() {
     selectedDate,
     timeFilter,
   ]);
+
+  const resetFilters = () => {
+    setSelectedDate(initialDate);
+    setSearchQuery("");
+    setPriceFilter("all");
+    setTimeFilter("all");
+    setCinemaFilter("all");
+  };
 
   const selectCinemaFilter = (cinemaName) => {
     setCinemaFilter(cinemaName);
@@ -571,12 +587,32 @@ export default function MainPage() {
       setMoviesData((prev) => [newMovie, ...prev]);
 
       try {
-        await addMovie(
+        const createdMovieRes = await addMovie(
           adminForm.title.trim(),
           adminForm.genre.trim(),
           durationMinutes,
           adminForm.poster.trim(),
           ageRatingForApi,
+        );
+        const createdMovie = createdMovieRes?.data;
+        if (!createdMovie?.id) {
+          throw new Error("Missing movie ID from backend");
+        }
+        setMoviesData((prev) =>
+          prev.map((movie) => {
+            if (movie.id !== tempMovieId) return movie;
+            return {
+              ...movie,
+              id: String(createdMovie.id),
+              title: createdMovie.name ?? movie.title,
+              genre: createdMovie.description ?? movie.genre,
+              poster: createdMovie.poster_url ?? movie.poster,
+              rating:
+                createdMovie.age_rating != null
+                  ? `${createdMovie.age_rating}+`
+                  : movie.rating,
+            };
+          }),
         );
         closeAdminPanel();
       } catch {
@@ -655,6 +691,7 @@ export default function MainPage() {
             setCinemaFilter={setCinemaFilter}
             allCinemas={allCinemas}
             dayTabs={dayTabs}
+            resetFilters={resetFilters}
             adm={adm}
             openAddMovie={() => {
               setAdminSession(null);

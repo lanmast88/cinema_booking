@@ -13,11 +13,17 @@ const navButtons = [
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const scrollToTop = () =>
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
 
   return (
     <header className="fixed inset-x-0 top-0 z-40 bg-[#070911]/80 backdrop-blur-sm">
       <div className="mx-auto flex w-full items-center justify-between px-2 pt-0.5 sm:px-6 lg:px-10">
-        <NavLink to="/" className="flex shrink-0 items-center gap-3">
+        <NavLink
+          to="/"
+          onClick={scrollToTop}
+          className="flex shrink-0 items-center gap-3"
+        >
           <img
             alt="Cinema Booking"
             src={logo}
@@ -34,6 +40,7 @@ export default function Header() {
               key={item.to}
               to={item.to}
               end
+              onClick={scrollToTop}
               className={({ isActive }) =>
                 `rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
                   isActive
@@ -66,6 +73,7 @@ export default function Header() {
           ) : (
             <NavLink
               to="/auth"
+              onClick={scrollToTop}
               className="btn-glossy hidden rounded-xl px-4 py-2 text-sm font-semibold text-white/90 hover:text-white md:inline-flex"
             >
               Вход / Регистрация

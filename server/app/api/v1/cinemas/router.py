@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -54,6 +54,22 @@ async def get_cinema_halls(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Кинотеатр не найден.")
 
     result = await db.execute(select(Hall).where(Hall.cinema_id == cinema_id))
+    return result.scalars().all()
+
+
+@router.get(
+    "/halls/by-cinema",
+    response_model=list[HallOut],
+    summary="Залы по списку ID кинотеатров",
+)
+async def get_halls_by_cinema_ids(
+    cinema_ids: list[int] = Query(default=[]),
+    db: AsyncSession = Depends(get_db),
+) -> list[Hall]:
+    if not cinema_ids:
+        return []
+
+    result = await db.execute(select(Hall).where(Hall.cinema_id.in_(cinema_ids)))
     return result.scalars().all()
 
 
