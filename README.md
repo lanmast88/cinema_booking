@@ -18,7 +18,7 @@
 7. [API](#api)
 8. [UI и пользовательский сценарий](#ui-и-пользовательский-сценарий)
 9. [Скриншоты](#скриншоты)
-10. [Диаграммы архитектуры](#диаграммы-архитектуры)
+10. [Диаграммы](#диаграммы)
 11. [Тестирование](#тестирование)
 12. [Планы по развитию](#планы-по-развитию)
 
@@ -304,28 +304,44 @@ Authorization: Bearer <jwt-token>
 
 ## Скриншоты
 
-Раздел для визуальной демонстрации интерфейса.
+- **Скриншоты 1, 2, 3** — Страница Расписание / Главная;
+<img width="3420" height="1972" alt="image" src="https://github.com/user-attachments/assets/c91c2d8d-08d9-4bf9-825f-644528709a6a" />
+<img width="3420" height="1972" alt="image" src="https://github.com/user-attachments/assets/019d11cf-f683-4da1-b588-f8d1a7d29a88" />
+<img width="3420" height="1972" alt="image" src="https://github.com/user-attachments/assets/2bab21ff-c5b4-4c31-a9d3-6bda32e5ef28" />
 
-`<!-- TODO: вставить сюда скриншоты страниц (главная, список фильмов, выбор мест, оформление заказа и т.д.) -->`
+- **Скриншот 4** — Модалка фильма - схема зала и выбор мест;
+<img width="3420" height="1972" alt="image" src="https://github.com/user-attachments/assets/167c0b5e-d159-48ad-8014-46badb7eb4c5" />
 
-Рекомендуемый формат:
+- **Скриншот 5** — Модалка фильма - схема зала и выбор мест;
+<img width="3420" height="2194" alt="image" src="https://github.com/user-attachments/assets/dc62ea7c-d92a-4a0b-b5bc-3c405dc0ccea" />
 
-- **Скриншот 1** — Главная страница;
-- **Скриншот 2** — Список сеансов/фильмов;
-- **Скриншот 3** — Схема зала с выбранными местами;
-- **Скриншот 4** — Экран подтверждения заказа.
+- **Скриншот 6** — Страница События;
+<img width="3420" height="2474" alt="image" src="https://github.com/user-attachments/assets/92c078db-e6ed-4006-bc0b-709a1bd2d1b0" />
+
+- **Скриншот 7** — Страница Спорт;
+<img width="3420" height="5030" alt="image" src="https://github.com/user-attachments/assets/6edaad1e-41b7-43ae-9bbe-f52d51f69736" />
+
+- **Скриншот 8** — Страница Аренда зала;
+<img width="3420" height="4576" alt="image" src="https://github.com/user-attachments/assets/ec8bde66-8743-4497-b0bc-9379d3793fc9" />
+
+- **Скриншот 9** — Страница Аренда зала;
+<img width="3420" height="2364" alt="image" src="https://github.com/user-attachments/assets/b2c6c411-c8af-49d5-a344-953a2b24708c" />
+
+- **Скриншот 10** — Страница Личный кабинет;
+<img width="3420" height="1972" alt="image" src="https://github.com/user-attachments/assets/5d7a39c1-6361-4377-b058-e6d9858ce617" />
 
 ---
 
-## Диаграммы архитектуры
+## Диаграммы
 
-`<!-- TODO: добавить диаграммы архитектуры (PlantUML / Mermaid / изображения) -->`
+- **ER диаграмма**
+<img width="745" height="908" alt="image" src="https://github.com/user-attachments/assets/4096fd1e-80b6-4026-b58d-7a68ffd19a59" />
 
-Рекомендуется добавить:
+- **Use Case**
+<img width="1948" height="1201" alt="Untitled Diagram drawio (1)" src="https://github.com/user-attachments/assets/668f0155-3ec4-45a6-aa84-f424f88eb574" />
 
-- **Диаграмму компонент** — frontend ↔ backend ↔ PostgreSQL ↔ внешние сервисы (если появятся).
-- **Диаграмму последовательности** для сценария «пользователь бронирует билет».
-- **Диаграмму сущностей БД (ER‑диаграмма)** — основные таблицы и связи: User, Cinema, Hall, Movie, Screening, Order, Ticket.
+- **User Story Map**
+<img width="1251" height="551" alt="Untitled Diagram drawio (3)" src="https://github.com/user-attachments/assets/ccfe0d2d-1fbf-44a1-a460-3d0a4f7e0eaf" />
 
 ---
 
