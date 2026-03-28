@@ -10,10 +10,9 @@
 2. [Функциональность](#функциональность)
 3. [Технологический стек](#технологический-стек)
 4. [Архитектура и структура репозитория](#архитектура-и-структура-репозитория)
-5. [Запуск проекта локально](#запуск-проекта-локально)
-   - [Требования](#требования)
-   - [Настройка backend](#настройка-backend)
-   - [Настройка frontend](#настройка-frontend)
+5. [Запуск проекта](#запуск-проекта)
+   - [Способ 1 — Docker Compose (рекомендуется)](#способ-1--docker-compose-рекомендуется)
+   - [Способ 2 — локально без Docker](#способ-2--локально-без-docker)
 6. [Переменные окружения](#переменные-окружения)
 7. [API](#api)
 8. [UI и пользовательский сценарий](#ui-и-пользовательский-сценарий)
@@ -62,7 +61,7 @@
 - **Аутентификация и авторизация**
   - REST‑эндпоинты для регистрации/логина;
   - JWT‑аутентификация (RS256) на backend;
-  - заготовка под роли `client` и `admin`.
+  - роли `client` и `admin`.
 
 Дополнительные детали по backend см. в `server/README.md`.
 
@@ -74,157 +73,224 @@
   - **React** 19 (SPA)
   - **Vite** 7 (сборка и dev‑сервер)
   - **React Router DOM** 7 (маршрутизация)
-  - **Tailwind CSS** 4 + дополнительные UI‑компоненты (`@headlessui/react`, `@heroicons/react`, `@tailwindplus/elements`)
+  - **Tailwind CSS** 4 + UI‑компоненты (`@headlessui/react`, `@heroicons/react`)
   - **Axios** — HTTP‑клиент для общения с API
 
 - **Backend**
   - **Python** 3.12
   - **FastAPI** 0.129 — основной веб‑фреймворк
   - **SQLAlchemy (async)** 2.x — ORM и работа с PostgreSQL
-  - **PostgreSQL + asyncpg** — основная БД
+  - **PostgreSQL 16 + asyncpg** — основная БД
   - **Alembic** — миграции схемы БД
   - **Pydantic / pydantic‑settings** — валидация данных и конфигурация
   - **Uvicorn** — ASGI‑сервер
+  - **uv** — менеджер зависимостей Python
 
-- **Инфраструктура и прочее**
-  - `.env`‑конфигурация через `python-dotenv`
-  - логирование запросов и ошибок через стандартный `logging` + кастомная конфигурация
-  - CORS настроен для фронтенда на `http://localhost:5173` (по умолчанию)
+- **Инфраструктура**
+  - **Docker + Docker Compose** — оркестрация всех сервисов
+  - CORS настроен для фронтенда на `http://localhost:5173`
 
 ---
 
 ## Архитектура и структура репозитория
 
-Репозиторий организован как монорепо с двумя основными приложениями: `client` (frontend) и `server` (backend).
-
 ```text
 cinema_booking_project/
-├── client/               # SPA-фронтенд на React + Vite
+├── client/                   # SPA-фронтенд на React + Vite
+│   ├── public/               # Статические файлы (доступны по корневому URL)
 │   ├── src/
-│   │   ├── components/   # Переиспользуемые UI-компоненты (Header, Footer, BurgerMenu и др.)
-│   │   ├── pages/        # Страницы приложения (MainPage, PromotionPage и др.)
-│   │   └── ...           # Маршрутизация, сервисы, стили
-│   ├── index.html
-│   ├── package.json
-│   └── README.md         # README, специфичный для фронтенда
+│   │   ├── assets/           # Изображения, иконки
+│   │   ├── components/       # Переиспользуемые UI-компоненты (Header, Footer и др.)
+│   │   ├── features/         # Фичи по доменам (main, auth и др.)
+│   │   ├── pages/            # Страницы приложения
+│   │   └── api/              # Axios-клиенты для взаимодействия с API
+│   ├── .env                  # Переменные окружения фронтенда
+│   └── package.json
 │
-├── server/               # REST API на FastAPI
+├── server/                   # REST API на FastAPI
 │   ├── app/
-│   │   ├── api/v1/       # Роутеры: auth, cinemas, halls, movies, screenings, orders
-│   │   ├── core/         # Конфигурация, логирование
-│   │   ├── db/           # Подключение к БД (AsyncSession, engine)
-│   │   ├── models/       # ORM-модели
-│   │   ├── schemas/      # Pydantic-схемы запросов/ответов
-│   │   └── main.py       # Точка входа приложения FastAPI
-│   ├── alembic/          # Миграции БД
-│   ├── .env              # Переменные окружения backend (не для коммита)
-│   ├── README.md         # README, специфичный для backend
-│   └── ...
+│   │   ├── api/v1/           # Роутеры: auth, cinemas, halls, movies, screenings, orders
+│   │   ├── core/             # Конфигурация, логирование
+│   │   ├── db/               # Подключение к БД (AsyncSession, engine)
+│   │   ├── models/           # ORM-модели
+│   │   ├── schemas/          # Pydantic-схемы запросов/ответов
+│   │   └── main.py           # Точка входа приложения FastAPI
+│   ├── alembic/              # Миграции БД
+│   ├── seed.py               # Скрипт заполнения БД тестовыми данными
+│   ├── pyproject.toml        # Зависимости проекта (uv)
+│   ├── .env                  # Переменные окружения backend
+│   └── README.md
 │
-├── .gitignore
-└── README.md             # Этот файл — основное описание проекта
+├── docker-compose.yml        # Оркестрация: db + backend + frontend
+└── README.md                 # Этот файл
 ```
 
-На уровне HTTP взаимодействия:
+На уровне HTTP:
 
-- фронтенд обращается к REST API по URL вида `http://localhost:8000/api/v1/...`;
-- backend предоставляет документацию OpenAPI/Swagger по адресу `http://localhost:8000/docs`;
-- CORS на сервере настроен так, чтобы принимать запросы с доменов фронтенда.
-
----
-
-## Запуск проекта локально
-
-### Требования
-
-- **Node.js**: 18+ (рекомендуется LTS)
-- **npm** или **pnpm** / **yarn** (примеры ниже даны для npm)
-- **Python**: 3.12
-- **PostgreSQL**: 13+ (локально или управляемый сервис)
-
-Дополнительно для удобства:
-
-- [uv](https://docs.astral.sh/uv/) — современный менеджер виртуальных окружений и зависимостей Python.
+- фронтенд обращается к API по адресу `http://localhost:8000/api/v1/...`;
+- backend предоставляет Swagger UI по адресу `http://localhost:8000/docs`;
+- CORS настроен для `http://localhost:5173` и `http://localhost:3000`.
 
 ---
 
-### Настройка backend
+## Запуск проекта
 
-Подробное описание есть в `server/README.md`. Ниже — краткий конспект.
+### Способ 1 — Docker Compose (рекомендуется)
 
-1. **Перейти в директорию backend**
+Самый простой способ: поднимает PostgreSQL, backend и frontend одной командой.
+
+#### Требования
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (включает Docker Compose)
+
+#### Шаг 1 — Клонировать репозиторий
+
+```bash
+git clone <url-репозитория>
+cd cinema_booking_project
+```
+
+#### Шаг 2 — Проверить файл `server/.env`
+
+Файл уже должен присутствовать. Убедитесь, что в нём такое содержимое:
+
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/cinema_booking
+CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
+LOG_LEVEL=INFO
+```
+
+> Хост БД — `db` (имя сервиса в Docker Compose, не `localhost`).
+
+#### Шаг 3 — Запустить все сервисы
+
+```bash
+docker compose up -d
+```
+
+Docker Compose автоматически:
+- поднимет PostgreSQL на порту `5433` (хост) / `5432` (внутри сети);
+- запустит backend на `http://localhost:8000` и применит миграции Alembic;
+- запустит frontend на `http://localhost:5173`.
+
+Дождитесь, пока все контейнеры станут `healthy` / `running`:
+
+```bash
+docker compose ps
+```
+
+#### Шаг 4 — Заполнить БД тестовыми данными
+
+```bash
+docker compose exec backend uv run python seed.py
+```
+
+Скрипт создаст:
+- 2 кинотеатра (Cinema Star — Москва, Nova Cinema — СПб)
+- 14 фильмов с постерами
+- 56 сеансов на ближайшие 4 дня
+- Тестовых пользователей:
+  - `admin@cinema.com` / `admin123` (администратор)
+  - `user@cinema.com` / `user123` (обычный пользователь)
+
+#### Шаг 5 — Открыть приложение
+
+| Сервис | URL |
+|---|---|
+| Фронтенд | http://localhost:5173 |
+| Backend API | http://localhost:8000 |
+| Swagger UI | http://localhost:8000/docs |
+
+---
+
+#### Управление контейнерами
+
+```bash
+# Остановить все сервисы (данные БД сохранятся)
+docker compose stop
+
+# Запустить снова
+docker compose start
+
+# Полностью удалить контейнеры и данные БД
+docker compose down -v
+
+# Пересобрать образы после изменений в коде
+docker compose up -d --build
+
+# Просмотр логов
+docker compose logs -f backend
+docker compose logs -f frontend
+```
+
+#### Сброс и повторное заполнение БД
+
+```bash
+docker compose down -v          # удалить контейнеры и volume с данными
+docker compose up -d            # поднять заново (миграции применятся автоматически)
+# подождать ~15 секунд
+docker compose exec backend uv run python seed.py
+```
+
+---
+
+### Способ 2 — локально без Docker
+
+Используется при разработке, если Docker недоступен.
+
+#### Требования
+
+- **Node.js** 18+ (рекомендуется LTS)
+- **Python** 3.12
+- **PostgreSQL** 16 (запущен локально)
+- **uv** — менеджер пакетов Python:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+#### Backend
 
 ```bash
 cd server
-```
 
-2. **Установить зависимости**
+# 1. Установить зависимости
+uv sync
 
-Вариант через `uv`:
+# 2. Настроить .env — изменить хост БД с "db" на "localhost"
+# DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/cinema_booking
 
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh  # один раз
-uv sync                                         # создаст виртуальное окружение и установит зависимости
-```
+# 3. Создать БД в PostgreSQL (если ещё не создана)
+psql -U postgres -c "CREATE DATABASE cinema_booking;"
 
-Или классический вариант (если uv не используется):
+# 4. Применить миграции
+uv run alembic upgrade head
 
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+# 5. Заполнить тестовыми данными
+uv run python seed.py
 
-3. **Сконфигурировать `.env`**
-
-Создайте файл `server/.env` (см. раздел [Переменные окружения](#переменные-окружения)).
-
-4. **Применить миграции БД**
-
-```bash
-alembic upgrade head
-```
-
-5. **Запустить backend‑сервер**
-
-```bash
+# 6. Запустить сервер
 uv run uvicorn app.main:app --reload
-# или, без uv:
-uvicorn app.main:app --reload
 ```
 
-По умолчанию API будет доступно по адресу:
+API будет на `http://localhost:8000`.
 
-- `http://localhost:8000` — базовый URL
-- `http://localhost:8000/docs` — Swagger UI
-
----
-
-### Настройка frontend
-
-1. **Перейти в директорию фронтенда**
+#### Frontend
 
 ```bash
 cd client
-```
 
-2. **Установить зависимости**
-
-```bash
+# 1. Установить зависимости
 npm install
-```
 
-3. **Запустить dev‑сервер**
+# 2. Убедиться, что .env указывает на локальный backend
+# VITE_API_URL=http://localhost:8000/api/v1
 
-```bash
+# 3. Запустить dev-сервер
 npm run dev
 ```
 
-По умолчанию Vite запустит приложение на:
-
-- `http://localhost:5173`
-
-Убедитесь, что CORS в backend разрешает данный origin (см. `server/.env` и раздел ниже).
+Фронтенд будет на `http://localhost:5173`.
 
 ---
 
@@ -232,50 +298,37 @@ npm run dev
 
 ### Backend (`server/.env`)
 
-**Важно:** не коммитьте реальные креды и секреты в репозиторий.
+| Переменная | Обязательна | Описание |
+|---|---|---|
+| `DATABASE_URL` | да | DSN для PostgreSQL. Для Docker: `postgresql+asyncpg://postgres:postgres@db:5432/cinema_booking`. Для локального запуска: `@localhost:5432/...` |
+| `CORS_ORIGINS` | нет | JSON-массив разрешённых origins. По умолчанию: `["http://localhost:5173"]` |
+| `LOG_LEVEL` | нет | Уровень логирования: `DEBUG`, `INFO`, `WARNING`, `ERROR`. По умолчанию: `INFO` |
+| `LOG_FILE` | нет | Путь к файлу логов. Если не задан — только консоль |
 
-Пример содержимого файла `.env`:
+### Frontend (`client/.env`)
 
-```env
-# Подключение к PostgreSQL
-DATABASE_URL=postgresql+asyncpg://user:password@host:5432/cinema_db
-
-# CORS: список разрешённых origins (фронтенд)
-CORS_ORIGINS=["http://localhost:5173","http://localhost:3000"]
-
-# Логирование
-LOG_LEVEL=INFO
-# LOG_FILE=logs/app.log  # при необходимости логирования в файл
-```
-
-- **`DATABASE_URL`** — DSN для PostgreSQL. Формат `postgresql+asyncpg://user:password@host:port/dbname`.
-- **`CORS_ORIGINS`** — JSON‑массив строк с URL фронтендов, которым разрешён доступ к API.
-- **`LOG_LEVEL`** — уровень логирования: `DEBUG`, `INFO`, `WARNING`, `ERROR`.
-- **`LOG_FILE`** — путь к файлу логов (опционально).
-
-Фронтенду, как правило, достаточно знать базовый URL API — он может быть вынесен в `.env` Vite (`VITE_API_URL`) или аналогичный механизм.
+| Переменная | Описание |
+|---|---|
+| `VITE_API_URL` | Базовый URL API. По умолчанию: `http://localhost:8000/api/v1` |
 
 ---
 
 ## API
 
-Описание на высоком уровне; детальная документация доступна в Swagger UI (`/docs`) и в `server/README.md`.
-
 - **Базовый URL**: `http://localhost:8000/api/v1`
+- **Swagger UI**: `http://localhost:8000/docs`
 
-Основные группы эндпоинтов:
-
-- **Auth** (`/auth`) — регистрация, вход, получение текущего пользователя.
-- **Cinemas** (`/cinemas`) — управление кинотеатрами.
-- **Halls** (`/halls`) — залы кинотеатров, схема рассадки.
-- **Movies** (`/movies`) — фильмы, описание, длительность, возрастные ограничения и др.
-- **Screenings** (`/screenings`) — сеансы: дата, время, зал, цена.
-- **Orders** (`/orders`) — создание заказа, выбор мест, изменение/отмена.
+| Префикс | Описание |
+|---|---|
+| `/auth` | Регистрация, вход, текущий пользователь |
+| `/cinemas` | CRUD кинотеатров и залов |
+| `/movies` | CRUD фильмов |
+| `/screenings` | Сеансы, схема мест зала |
+| `/orders` | Бронирование, оплата, отмена заказов |
 
 ### Аутентификация
 
-- схема: **JWT Bearer** (RS256);
-- клиент отправляет токен в заголовке:
+Схема: **JWT Bearer (RS256)**. После входа клиент передаёт токен в заголовке:
 
 ```http
 Authorization: Bearer <jwt-token>
@@ -285,20 +338,12 @@ Authorization: Bearer <jwt-token>
 
 ## UI и пользовательский сценарий
 
-На уровне фронтенда реализованы основные пользовательские страницы:
-
-- **Главная страница (`MainPage`)**
-  - подборки фильмов и/или сеансов;
-  - навигация по кинотеатрам.
-
-- **Страница акций (`PromotionPage`)**
-  - отображение текущих спецпредложений, акций и скидок;
-  - возможность перейти к выбору фильма/сеанса из акции.
-
-- **Общие компоненты**
-  - `Header` — шапка приложения, навигация;
-  - `Footer` — футер, контактная информация, ссылки;
-  - `BurgerMenu` — адаптивное мобильное меню.
+- **Главная / Расписание** — список фильмов, сеансы по датам, фильтрация
+- **Модалка фильма** — схема зала, выбор мест, оформление заказа
+- **Акции** — текущие спецпредложения
+- **События / Спорт** — трансляции и спортивные мероприятия
+- **Аренда зала** — бронирование зала для частных мероприятий
+- **Личный кабинет** — история заказов
 
 ---
 
@@ -347,16 +392,10 @@ Authorization: Bearer <jwt-token>
 
 ## Тестирование
 
-Возможные направления (заготовка раздела, под конкретную реализацию тестов):
+Возможные направления:
 
-- **Backend**
-  - юнит‑тесты на бизнес‑логику;
-  - интеграционные тесты API через `httpx`/`pytest` с тестовой БД.
-- **Frontend**
-  - snapshot‑тесты и тесты компонентов (например, через `Vitest`/`Jest` + `Testing Library`);
-  - e2e‑тесты через Playwright / Cypress.
-
-`<!-- TODO: описать конкретные команды запуска тестов по мере реализации -->`
+- **Backend** — юнит‑тесты на бизнес‑логику; интеграционные тесты API через `httpx`/`pytest` с тестовой БД.
+- **Frontend** — snapshot‑тесты и тесты компонентов через `Vitest` + `Testing Library`; e2e‑тесты через Playwright.
 
 ---
 
