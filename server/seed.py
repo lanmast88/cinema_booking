@@ -101,6 +101,8 @@ async def seed() -> None:
             ("Губка Боб: В поисках квадратных штанов", "Комедия, Мультфильм · 6+",      105, f"{BASE}/movie10child.webp"),
             ("Шрек",                                   "Комедия, Мультфильм · 6+",      125, f"{BASE}/movie11child.png"),
             ("Заклятие: Обряд реинкарнации",           "Хоррор · 18+",                  105, f"{BASE}/movie12.webp"),
+            ("Интерстеллар",                           "Фантастика, Драма · 12+",        169, "/movie13.jpg"),
+            ("Дюна: Часть вторая",                     "Фантастика, Приключения · 16+",  166, "/movie14.jpg"),
         ]
         movie_map: dict[str, Movie] = {}
         for name, description, duration_min, poster_url in movies_raw:
@@ -173,6 +175,16 @@ async def seed() -> None:
             ("Заклятие: Обряд реинкарнации", 1, "19:10", 680, "Зал 1", "Cinema Star", "2D"),
             ("Заклятие: Обряд реинкарнации", 2, "17:00", 590, "Зал 5", "Nova Cinema", "2D"),
             ("Заклятие: Обряд реинкарнации", 3, "22:00", 760, "Зал 2", "Cinema Star", "2D"),
+
+            ("Интерстеллар",                 0, "17:00",  720, "Зал 6", "Nova Cinema", "IMAX"),
+            ("Интерстеллар",                 1, "20:30",  800, "VIP",   "Cinema Star", "IMAX"),
+            ("Интерстеллар",                 2, "14:00",  650, "Зал 4", "Nova Cinema", "2D"),
+            ("Интерстеллар",                 3, "21:15",  750, "Зал 5", "Cinema Star", "2D"),
+
+            ("Дюна: Часть вторая",           0, "19:45",  770, "VIP",   "Cinema Star", "Dolby"),
+            ("Дюна: Часть вторая",           1, "16:10",  690, "Зал 6", "Nova Cinema", "2D"),
+            ("Дюна: Часть вторая",           2, "22:30",  810, "VIP",   "Nova Cinema", "IMAX"),
+            ("Дюна: Часть вторая",           3, "14:50",  620, "Зал 3", "Cinema Star", "2D"),
         ]
 
         for movie_name, day_offset, time_str, price, hall_name, cinema_name, fmt in screenings_raw:
@@ -201,8 +213,8 @@ async def seed() -> None:
 
     print("✅ База данных успешно заполнена!")
     print("   Кинотеатры: Cinema Star (Москва), Nova Cinema (СПб)")
-    print("   Фильмов:    12")
-    print("   Сеансов:    48")
+    print("   Фильмов:    14")
+    print("   Сеансов:    56")
     print("   Admin:      admin@cinema.com  /  admin123")
     print("   User:       user@cinema.com   /  user123")
 

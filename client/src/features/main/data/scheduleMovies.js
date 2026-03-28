@@ -10,6 +10,8 @@ import movie9child from "../../../assets/movie9child.webp";
 import movie10child from "../../../assets/movie10child.webp";
 import movie11child from "../../../assets/movie11child.png";
 import movie12 from "../../../assets/movie12.webp";
+import movie13 from "../../../assets/techfeature1.jpg";
+import movie14 from "../../../assets/techfeature2.jpg";
 
 export const scheduleMovies = [
   {
@@ -179,6 +181,34 @@ export const scheduleMovies = [
       { dayOffset: 1, time: "19:10", price: 680, format: "2D", hall: "Зал 1", cinema: "Cinema Star" },
       { dayOffset: 2, time: "17:00", price: 590, format: "2D", hall: "Зал 5", cinema: "Nova Cinema" },
       { dayOffset: 3, time: "22:00", price: 760, format: "2D", hall: "Зал 2", cinema: "Cinema Star" },
+    ],
+  },
+  {
+    id: "movie-13",
+    title: "Интерстеллар",
+    genre: "Фантастика, Драма",
+    duration: "2ч 49м",
+    rating: "12+",
+    poster: movie13,
+    screenings: [
+      { dayOffset: 0, time: "17:00", price: 720, format: "IMAX", hall: "Зал 6", cinema: "Nova Cinema" },
+      { dayOffset: 1, time: "20:30", price: 800, format: "IMAX", hall: "VIP", cinema: "Cinema Star" },
+      { dayOffset: 2, time: "14:00", price: 650, format: "2D", hall: "Зал 4", cinema: "Nova Cinema" },
+      { dayOffset: 3, time: "21:15", price: 750, format: "2D", hall: "Зал 5", cinema: "Cinema Star" },
+    ],
+  },
+  {
+    id: "movie-14",
+    title: "Дюна: Часть вторая",
+    genre: "Фантастика, Приключения",
+    duration: "2ч 46м",
+    rating: "16+",
+    poster: movie14,
+    screenings: [
+      { dayOffset: 0, time: "19:45", price: 770, format: "Dolby", hall: "VIP", cinema: "Cinema Star" },
+      { dayOffset: 1, time: "16:10", price: 690, format: "2D", hall: "Зал 6", cinema: "Nova Cinema" },
+      { dayOffset: 2, time: "22:30", price: 810, format: "IMAX", hall: "VIP", cinema: "Nova Cinema" },
+      { dayOffset: 3, time: "14:50", price: 620, format: "2D", hall: "Зал 3", cinema: "Cinema Star" },
     ],
   },
 ];
