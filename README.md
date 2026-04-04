@@ -357,7 +357,7 @@ Authorization: Bearer <jwt-token>
 - **Скриншот 4** — Модалка фильма - схема зала и выбор мест;
 <img width="3420" height="1972" alt="image" src="https://github.com/user-attachments/assets/167c0b5e-d159-48ad-8014-46badb7eb4c5" />
 
-- **Скриншот 5** — Модалка фильма - схема зала и выбор мест;
+- **Скриншот 5** — Страница оплаты заказа;
 <img width="3420" height="2194" alt="image" src="https://github.com/user-attachments/assets/dc62ea7c-d92a-4a0b-b5bc-3c405dc0ccea" />
 
 - **Скриншот 6** — Страница События;
@@ -372,7 +372,7 @@ Authorization: Bearer <jwt-token>
 - **Скриншот 9** — Страница Аренда зала;
 <img width="3420" height="2364" alt="image" src="https://github.com/user-attachments/assets/b2c6c411-c8af-49d5-a344-953a2b24708c" />
 
-- **Скриншот 10** — Страница Личный кабинет;
+- **Скриншот 10** — Страница Личный кабинет.
 <img width="3420" height="1972" alt="image" src="https://github.com/user-attachments/assets/5d7a39c1-6361-4377-b058-e6d9858ce617" />
 
 ---
